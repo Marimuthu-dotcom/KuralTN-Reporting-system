@@ -1,7 +1,7 @@
 -- 05_create_complaints.sql
 -- Core Complaints Table
 
-USE civic_grievance;
+USE kuraltn;
 
 CREATE TABLE IF NOT EXISTS complaints (
   id VARCHAR(36) PRIMARY KEY,

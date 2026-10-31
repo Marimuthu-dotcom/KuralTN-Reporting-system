@@ -1,7 +1,7 @@
 -- 13_create_sessions_and_audit.sql
 -- Refresh Token Sessions, Official Escalation Directory, and Security Audit Logs
 
-USE civic_grievance;
+USE kuraltn;
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id VARCHAR(36) PRIMARY KEY,

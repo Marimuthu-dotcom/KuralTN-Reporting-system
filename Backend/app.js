@@ -5,7 +5,6 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
 import { corsOptions } from './config/cors.js';
 import { UPLOAD_CONFIG } from './config/upload.js';
 import { rateLimiter } from './middleware/rateLimiter.js';

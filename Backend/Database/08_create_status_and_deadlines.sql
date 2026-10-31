@@ -1,7 +1,7 @@
 -- 08_create_status_and_deadlines.sql
 -- Status Transitions, Official Updates, and Evidence-Based Deadline Tracking
 
-USE civic_grievance;
+USE kuraltn;
 
 CREATE TABLE IF NOT EXISTS complaint_status_history (
   id VARCHAR(36) PRIMARY KEY,

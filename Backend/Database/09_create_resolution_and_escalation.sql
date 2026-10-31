@@ -1,7 +1,7 @@
 -- 09_create_resolution_and_escalation.sql
 -- Resolution Proposals, Citizen Verification, and Structured Escalations
 
-USE civic_grievance;
+USE kuraltn;
 
 CREATE TABLE IF NOT EXISTS complaint_resolution_evidence (
   id VARCHAR(36) PRIMARY KEY,

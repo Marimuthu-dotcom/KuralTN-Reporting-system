@@ -1,7 +1,7 @@
 -- 04_create_categories.sql
 -- Civic Complaint Categories Management
 
-USE civic_grievance;
+USE kuraltn;
 
 CREATE TABLE IF NOT EXISTS categories (
   id VARCHAR(36) PRIMARY KEY,

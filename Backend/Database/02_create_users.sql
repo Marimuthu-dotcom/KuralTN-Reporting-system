@@ -1,7 +1,6 @@
 -- 02_create_users.sql
 -- User and Role Management Tables
-
-USE civic_grievance;
+USE kuraltn;
 
 CREATE TABLE IF NOT EXISTS roles (
   id VARCHAR(36) PRIMARY KEY,

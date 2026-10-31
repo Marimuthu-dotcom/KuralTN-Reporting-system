@@ -1,7 +1,7 @@
 -- 14_create_indexes_and_constraints.sql
 -- Performance Indexes and Integrity Constraints
 
-USE civic_grievance;
+USE kuraltn;
 
 -- Geographic and Complaint indexing
 CREATE INDEX IF NOT EXISTS idx_complaints_geo ON complaints (latitude, longitude);

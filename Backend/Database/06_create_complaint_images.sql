@@ -1,7 +1,7 @@
 -- 06_create_complaint_images.sql
 -- Complaint Supporting Images and Attachments
 
-USE civic_grievance;
+USE kuraltn;
 
 CREATE TABLE IF NOT EXISTS complaint_images (
   id VARCHAR(36) PRIMARY KEY,

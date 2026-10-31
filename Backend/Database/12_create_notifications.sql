@@ -1,7 +1,7 @@
 -- 12_create_notifications.sql
 -- Persistent Notifications for Complaint Lifecycle, Deadlines, and Updates
 
-USE civic_grievance;
+USE kuraltn;
 
 CREATE TABLE IF NOT EXISTS notifications (
   id VARCHAR(36) PRIMARY KEY,

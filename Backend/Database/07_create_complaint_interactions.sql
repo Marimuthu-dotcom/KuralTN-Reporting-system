@@ -1,7 +1,7 @@
 -- 07_create_complaint_interactions.sql
 -- Community Support and Comments (Ward Restricted)
 
-USE civic_grievance;
+USE kuraltn;
 
 CREATE TABLE IF NOT EXISTS complaint_supports (
   id VARCHAR(36) PRIMARY KEY,

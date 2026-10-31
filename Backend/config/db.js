@@ -9,10 +9,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_STORE_PATH = path.resolve(__dirname, '../Database/data_store.json');
 
-let pool = null;
-let inMemoryStore = null;
-
-// Initial schema store fallback
+// ═══════════════════════════════════════════════════════════════
+// Seed data (unchanged)
+// ═══════════════════════════════════════════════════════════════
 function getInitialSeedData() {
   return {
     roles: [
@@ -364,74 +363,13 @@ function getInitialSeedData() {
       { id: 'img-005', complaint_id: 'comp-005', image_url: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800', caption: 'Damaged light fixture prior to repair', is_primary: true },
     ],
     complaint_deadlines: [
-      {
-        id: 'dl-001',
-        complaint_id: 'comp-001',
-        original_target_date: '2026-10-14',
-        current_target_date: '2026-10-14',
-        deadline_type: 'DEPARTMENT_PROVIDED_TARGET',
-        responsible_department: 'Solid Waste Management & Health Wing',
-        supporting_source_text: 'Official target committed by Sanitary Inspector Thiru S. Balan via Corporation Memo SWM/2026/TK-89',
-        entered_by_user_id: 'user-councillor-senthil',
-        entered_by_role: 'WARD_COUNCILLOR',
-        is_active: true,
-        created_at: '2026-10-07T10:00:00Z',
-      },
-      {
-        id: 'dl-002',
-        complaint_id: 'comp-002',
-        original_target_date: '2026-10-12',
-        current_target_date: '2026-10-12',
-        deadline_type: 'VERIFIED_OFFICIAL_TIMELINE',
-        responsible_department: 'City Water Works Department',
-        supporting_source_text: 'Tamil Nadu Citizen Charter Rule 4(b) - Municipal Drinking Water Main Repairs within 48 hours',
-        entered_by_user_id: 'user-department-murugan',
-        entered_by_role: 'DEPARTMENT_HANDLER',
-        is_active: true,
-        created_at: '2026-10-07T14:00:00Z',
-      },
-      {
-        id: 'dl-003',
-        complaint_id: 'comp-003',
-        original_target_date: '2026-10-05',
-        current_target_date: '2026-10-16',
-        deadline_type: 'ESTIMATED_TARGET',
-        responsible_department: 'Underground Drainage & Sewerage Division',
-        supporting_source_text: 'Target revised following extension request due to specialized pre-cast manhole cover procurement delay',
-        entered_by_user_id: 'user-councillor-subramanian',
-        entered_by_role: 'WARD_COUNCILLOR',
-        is_active: true,
-        created_at: '2026-09-29T10:00:00Z',
-      },
-      {
-        id: 'dl-005',
-        complaint_id: 'comp-005',
-        original_target_date: '2026-10-09',
-        current_target_date: '2026-10-09',
-        deadline_type: 'DEPARTMENT_PROVIDED_TARGET',
-        responsible_department: 'Electrical Maintenance Department',
-        supporting_source_text: 'Contractor Work Order #EL-45-779 issued by Electrical Engineer',
-        entered_by_user_id: 'user-councillor-meenakshi',
-        entered_by_role: 'WARD_COUNCILLOR',
-        is_active: true,
-        created_at: '2026-10-05T12:00:00Z',
-      },
+      { id: 'dl-001', complaint_id: 'comp-001', original_target_date: '2026-10-14', current_target_date: '2026-10-14', deadline_type: 'DEPARTMENT_PROVIDED_TARGET', responsible_department: 'Solid Waste Management & Health Wing', supporting_source_text: 'Official target committed by Sanitary Inspector Thiru S. Balan via Corporation Memo SWM/2026/TK-89', entered_by_user_id: 'user-councillor-senthil', entered_by_role: 'WARD_COUNCILLOR', is_active: true, created_at: '2026-10-07T10:00:00Z' },
+      { id: 'dl-002', complaint_id: 'comp-002', original_target_date: '2026-10-12', current_target_date: '2026-10-12', deadline_type: 'VERIFIED_OFFICIAL_TIMELINE', responsible_department: 'City Water Works Department', supporting_source_text: 'Tamil Nadu Citizen Charter Rule 4(b) - Municipal Drinking Water Main Repairs within 48 hours', entered_by_user_id: 'user-department-murugan', entered_by_role: 'DEPARTMENT_HANDLER', is_active: true, created_at: '2026-10-07T14:00:00Z' },
+      { id: 'dl-003', complaint_id: 'comp-003', original_target_date: '2026-10-05', current_target_date: '2026-10-16', deadline_type: 'ESTIMATED_TARGET', responsible_department: 'Underground Drainage & Sewerage Division', supporting_source_text: 'Target revised following extension request due to specialized pre-cast manhole cover procurement delay', entered_by_user_id: 'user-councillor-subramanian', entered_by_role: 'WARD_COUNCILLOR', is_active: true, created_at: '2026-09-29T10:00:00Z' },
+      { id: 'dl-005', complaint_id: 'comp-005', original_target_date: '2026-10-09', current_target_date: '2026-10-09', deadline_type: 'DEPARTMENT_PROVIDED_TARGET', responsible_department: 'Electrical Maintenance Department', supporting_source_text: 'Contractor Work Order #EL-45-779 issued by Electrical Engineer', entered_by_user_id: 'user-councillor-meenakshi', entered_by_role: 'WARD_COUNCILLOR', is_active: true, created_at: '2026-10-05T12:00:00Z' },
     ],
     complaint_deadline_history: [
-      {
-        id: 'dlh-001',
-        complaint_id: 'comp-003',
-        deadline_id: 'dl-003',
-        action_type: 'EXTENSION_REQUESTED',
-        previous_target_date: '2026-10-05',
-        new_target_date: '2026-10-16',
-        requested_by_user_id: 'user-councillor-subramanian',
-        requested_by_role: 'WARD_COUNCILLOR',
-        decided_by_user_id: 'user-councillor-subramanian',
-        reason: 'Heavy rain flooded trench preventing curing of cement collar; awaiting precast heavy duty ring.',
-        status: 'APPROVED',
-        created_at: '2026-10-05T16:00:00Z',
-      },
+      { id: 'dlh-001', complaint_id: 'comp-003', deadline_id: 'dl-003', action_type: 'EXTENSION_REQUESTED', previous_target_date: '2026-10-05', new_target_date: '2026-10-16', requested_by_user_id: 'user-councillor-subramanian', requested_by_role: 'WARD_COUNCILLOR', decided_by_user_id: 'user-councillor-subramanian', reason: 'Heavy rain flooded trench preventing curing of cement collar; awaiting precast heavy duty ring.', status: 'APPROVED', created_at: '2026-10-05T16:00:00Z' },
     ],
     complaint_status_history: [
       { id: 'sh-001', complaint_id: 'comp-001', previous_status: 'Submitted', new_status: 'Acknowledged', actor_id: 'user-councillor-senthil', actor_role: 'WARD_COUNCILLOR', actor_name: 'Councillor M. Senthil Nathan', reason: 'Inspected site during morning ward inspection; escalated to Sanitary Inspector for dumper deployment.', update_source: 'COUNCILLOR', created_at: '2026-10-06T11:00:00Z' },
@@ -443,32 +381,8 @@ function getInitialSeedData() {
       { id: 'sh-007', complaint_id: 'comp-005', previous_status: 'In Progress', new_status: 'Resolved', actor_id: 'user-councillor-meenakshi', actor_role: 'WARD_COUNCILLOR', actor_name: 'Councillor R. Meenakshi', reason: '70W LED fixture replaced and tested; citizen confirmed night illumination is restored.', update_source: 'COUNCILLOR', created_at: '2026-10-09T20:00:00Z' },
     ],
     complaint_resolution_evidence: [
-      {
-        id: 're-002',
-        complaint_id: 'comp-002',
-        submitted_by_user_id: 'user-department-murugan',
-        submitted_by_role: 'DEPARTMENT_HANDLER',
-        submitted_by_name: 'Er. K. Murugan',
-        completion_date: '2026-10-10',
-        description: '150mm ductile iron pipe joint replaced with high-grade flanged collar. Clean pressure reading verified at 3.5 bar without leaks. Trench compacted with wet gravel mix.',
-        evidence_image_url: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800',
-        source_of_resolution: 'Field Completion Inspection by Assistant Executive Engineer',
-        is_disputed: false,
-        created_at: '2026-10-10T10:00:00Z',
-      },
-      {
-        id: 're-005',
-        complaint_id: 'comp-005',
-        submitted_by_user_id: 'user-councillor-meenakshi',
-        submitted_by_role: 'WARD_COUNCILLOR',
-        submitted_by_name: 'Councillor R. Meenakshi',
-        completion_date: '2026-10-09',
-        description: 'Old rusted bracket dismantled and new Philips 70W warm-white LED luminaire mounted and wired to timer circuit.',
-        evidence_image_url: 'https://images.unsplash.com/photo-1517420704952-d9f39e95b43e?w=800',
-        source_of_resolution: 'Electrical Contractor Job Card #4592 signed by Field Wireman',
-        is_disputed: false,
-        created_at: '2026-10-09T20:00:00Z',
-      },
+      { id: 're-002', complaint_id: 'comp-002', submitted_by_user_id: 'user-department-murugan', submitted_by_role: 'DEPARTMENT_HANDLER', submitted_by_name: 'Er. K. Murugan', completion_date: '2026-10-10', description: '150mm ductile iron pipe joint replaced with high-grade flanged collar. Clean pressure reading verified at 3.5 bar without leaks. Trench compacted with wet gravel mix.', evidence_image_url: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=800', source_of_resolution: 'Field Completion Inspection by Assistant Executive Engineer', is_disputed: false, created_at: '2026-10-10T10:00:00Z' },
+      { id: 're-005', complaint_id: 'comp-005', submitted_by_user_id: 'user-councillor-meenakshi', submitted_by_role: 'WARD_COUNCILLOR', submitted_by_name: 'Councillor R. Meenakshi', completion_date: '2026-10-09', description: 'Old rusted bracket dismantled and new Philips 70W warm-white LED luminaire mounted and wired to timer circuit.', evidence_image_url: 'https://images.unsplash.com/photo-1517420704952-d9f39e95b43e?w=800', source_of_resolution: 'Electrical Contractor Job Card #4592 signed by Field Wireman', is_disputed: false, created_at: '2026-10-09T20:00:00Z' },
     ],
     complaint_supports: [
       { id: 'sup-01', complaint_id: 'comp-001', user_id: 'user-citizen-karthik', ward_id: 'ward-43-thoothukudi', created_at: '2026-10-06T10:00:00Z' },
@@ -482,55 +396,13 @@ function getInitialSeedData() {
       { id: 'comm-04', complaint_id: 'comp-002', user_id: 'user-department-murugan', ward_id: 'ward-43-thoothukudi', comment_text: 'Pipeline isolated at Valve #4. Main pressure restoration anticipated by 4:00 PM today.', is_official: true, created_at: '2026-10-07T09:30:00Z' },
     ],
     complaint_official_updates: [
-      {
-        id: 'ou-01',
-        complaint_id: 'comp-001',
-        author_id: 'user-councillor-senthil',
-        author_role: 'WARD_COUNCILLOR',
-        author_name: 'Councillor M. Senthil Nathan',
-        update_title: 'Sanitary Conservancy Team Mobilized',
-        update_body: 'Zone 2 conservancy supervisor assigned 4 conservancy workers with mini tipper vehicle for complete clearing.',
-        department_source: 'Thoothukudi Corporation Health Department',
-        reference_no: 'TKC/SWM/2026/043',
-        progress_percentage: 60,
-        created_at: '2026-10-08T09:30:00Z',
-      },
+      { id: 'ou-01', complaint_id: 'comp-001', author_id: 'user-councillor-senthil', author_role: 'WARD_COUNCILLOR', author_name: 'Councillor M. Senthil Nathan', update_title: 'Sanitary Conservancy Team Mobilized', update_body: 'Zone 2 conservancy supervisor assigned 4 conservancy workers with mini tipper vehicle for complete clearing.', department_source: 'Thoothukudi Corporation Health Department', reference_no: 'TKC/SWM/2026/043', progress_percentage: 60, created_at: '2026-10-08T09:30:00Z' },
     ],
     complaint_escalations: [
-      {
-        id: 'esc-001',
-        complaint_id: 'comp-003',
-        escalation_reference: 'ESC-2026-00088',
-        initiated_by_user_id: 'user-citizen-karthik',
-        initiated_by_role: 'CITIZEN',
-        reason_category: 'OVERDUE_DEADLINE',
-        detailed_reason: 'Critical open manhole hazard remained completely unaddressed past the 5-day deadline. School children pass this route daily.',
-        escalation_tier: 'TIER_2_MUNICIPAL_COMMISSIONER',
-        target_authority: 'Municipal Commissioner, Tirunelveli Corporation',
-        external_portal_ref: 'TNC-2026-8812',
-        status: 'UNDER_REVIEW',
-        official_action_notes: 'Referred to Superintending Engineer for immediate spot barricading and cast iron grating placement.',
-        created_at: '2026-10-06T15:00:00Z',
-      },
+      { id: 'esc-001', complaint_id: 'comp-003', escalation_reference: 'ESC-2026-00088', initiated_by_user_id: 'user-citizen-karthik', initiated_by_role: 'CITIZEN', reason_category: 'OVERDUE_DEADLINE', detailed_reason: 'Critical open manhole hazard remained completely unaddressed past the 5-day deadline. School children pass this route daily.', escalation_tier: 'TIER_2_MUNICIPAL_COMMISSIONER', target_authority: 'Municipal Commissioner, Tirunelveli Corporation', external_portal_ref: 'TNC-2026-8812', status: 'UNDER_REVIEW', official_action_notes: 'Referred to Superintending Engineer for immediate spot barricading and cast iron grating placement.', created_at: '2026-10-06T15:00:00Z' },
     ],
     confidential_accountability_reports: [
-      {
-        id: 'acc-001',
-        case_reference_id: 'ACC-2026-00012',
-        reporter_user_id: 'user-citizen-anand',
-        complaint_id: 'comp-003',
-        complaint_reference_id: 'CIV-2026-00045',
-        reported_councillor_user_id: 'user-councillor-subramanian',
-        reported_ward_id: 'ward-12-tirunelveli',
-        concern_type: 'FALSE_CLAIM_OF_RESOLUTION',
-        description: 'Public grievance for open stormwater catch basin was marked as completed in the internal register despite open pit continuing to endanger evening traffic without barricade.',
-        timeline_dates_text: 'Reported on Sept 28; marked closed on Oct 2; photo taken Oct 4 shows open hole',
-        follow_up_attempts_text: 'Attempted 3 phone calls to ward office; no response given',
-        expected_action_and_outcome: 'Independent field inspection by District Oversight Board and penalization of false sign-off',
-        status: 'Under Review',
-        is_anonymity_requested: true,
-        created_at: '2026-10-04T11:00:00Z',
-      },
+      { id: 'acc-001', case_reference_id: 'ACC-2026-00012', reporter_user_id: 'user-citizen-anand', complaint_id: 'comp-003', complaint_reference_id: 'CIV-2026-00045', reported_councillor_user_id: 'user-councillor-subramanian', reported_ward_id: 'ward-12-tirunelveli', concern_type: 'FALSE_CLAIM_OF_RESOLUTION', description: 'Public grievance for open stormwater catch basin was marked as completed in the internal register despite open pit continuing to endanger evening traffic without barricade.', timeline_dates_text: 'Reported on Sept 28; marked closed on Oct 2; photo taken Oct 4 shows open hole', follow_up_attempts_text: 'Attempted 3 phone calls to ward office; no response given', expected_action_and_outcome: 'Independent field inspection by District Oversight Board and penalization of false sign-off', status: 'Under Review', is_anonymity_requested: true, created_at: '2026-10-04T11:00:00Z' },
     ],
     accountability_review_assignments: [
       { id: 'ara-001', report_id: 'acc-001', reviewer_user_id: 'user-reviewer-kalyani', assigned_by_user_id: 'user-admin-ramanathan', is_active: true, assigned_at: '2026-10-04T12:00:00Z' },
@@ -566,7 +438,7 @@ function getInitialSeedData() {
     ],
     official_escalation_contacts: [
       { id: 'oec-01', portal_name: 'Tamil Nadu Chief Minister Helpline (Mudalvarin Mugavari)', authority_level: 'STATE_LEVEL', district_id: null, department_name: 'Public Grievance Redressal Dept', helpline_number: '1100 (Toll Free)', website_url: 'https://cmhelpline.tnega.org', escalation_instructions: 'Use CM Helpline if ward-level or municipal body issues remain unresolved beyond the designated citizen charter SLA or after formal appeal.', last_verified_date: '2026-09-15', is_verified: true },
-      { id: 'oec-02', 'portal_name': 'Thoothukudi City Corporation 24x7 Control Room', authority_level: 'MUNICIPAL_CORPORATION', district_id: 'dist-thoothukudi', department_name: 'Corporation General Grievances', helpline_number: '0461-2326901 / 1800-425-4244', website_url: 'https://thoothukudicorporation.tn.gov.in', escalation_instructions: 'Direct corporation grievance line for urgent civic failures, uncollected waste dumps, and water supply ruptures across Wards 1 to 60.', last_verified_date: '2026-09-20', is_verified: true },
+      { id: 'oec-02', portal_name: 'Thoothukudi City Corporation 24x7 Control Room', authority_level: 'MUNICIPAL_CORPORATION', district_id: 'dist-thoothukudi', department_name: 'Corporation General Grievances', helpline_number: '0461-2326901 / 1800-425-4244', website_url: 'https://thoothukudicorporation.tn.gov.in', escalation_instructions: 'Direct corporation grievance line for urgent civic failures, uncollected waste dumps, and water supply ruptures across Wards 1 to 60.', last_verified_date: '2026-09-20', is_verified: true },
       { id: 'oec-03', portal_name: 'Tirunelveli Corporation Citizen WhatsApp Service', authority_level: 'MUNICIPAL_CORPORATION', district_id: 'dist-tirunelveli', department_name: 'Municipal Administration', helpline_number: '94437-01234', website_url: 'https://tirunelvelicorporation.tn.gov.in', escalation_instructions: 'Send photo, location coordinates, and description for automated token generation with the Commissioner office.', last_verified_date: '2026-08-30', is_verified: true },
       { id: 'oec-04', portal_name: 'TANGEDCO (Electricity Board) Minnagam Central Control', authority_level: 'DEPARTMENTAL_DIRECTORATE', district_id: null, department_name: 'Tamil Nadu Generation and Distribution Corp', helpline_number: '94987 94987', website_url: 'https://www.tangedco.gov.in', escalation_instructions: 'Report sparking transformers, sagging high-tension conductors, power outages, and broken utility poles 24x7.', last_verified_date: '2026-10-01', is_verified: true },
       { id: 'oec-05', portal_name: 'TWAD Board Drinking Water Emergency Helpline', authority_level: 'DEPARTMENTAL_DIRECTORATE', district_id: null, department_name: 'Tamil Nadu Water Supply & Drainage Board', helpline_number: '1916 / 044-28524907', website_url: 'https://www.twadboard.tn.gov.in', escalation_instructions: 'Escalate bulk water transmission breakdowns, regional water scheme pump failures, and canal water supply issues.', last_verified_date: '2026-09-10', is_verified: true },
@@ -608,31 +480,212 @@ function getInitialSeedData() {
   };
 }
 
-// Initialize persistence
-export function initDB() {
-  if (inMemoryStore) return inMemoryStore;
+// ═══════════════════════════════════════════════════════════════
+// DB state + pool + timers
+// ═══════════════════════════════════════════════════════════════
+let pool = null;
+let inMemoryStore = null;
+
+const DB_STATE = Object.freeze({
+  CONNECTED: 'CONNECTED',
+  DISCONNECTED: 'DISCONNECTED',
+  RECONNECTING: 'RECONNECTING',
+});
+
+let dbState = DB_STATE.DISCONNECTED;
+let healthTimer = null;
+let reconnectTimer = null;
+
+const HEALTH_CHECK_INTERVAL_MS = 30_000;
+const RECONNECT_INTERVAL_MS = 30_000;
+
+export const getDBState = () => dbState;
+export const isUsingMySQL = () => dbState === DB_STATE.CONNECTED;
+
+// ═══════════════════════════════════════════════════════════════
+// Pool
+// ═══════════════════════════════════════════════════════════════
+export function createPool() {
+  if (pool) 
+    return pool;
+
+  pool = mysql.createPool({
+    host: ENV.DB.HOST || 'localhost',
+    port: Number(ENV.DB.PORT || 3306),
+    user: ENV.DB.USER || 'root',
+    password: ENV.DB.PASSWORD || '',
+    database: ENV.DB.NAME || 'civic_grievance',
+    waitForConnections: true,
+    connectionLimit: Number(ENV.DB.POOL_LIMIT || 10),
+    queueLimit: 0,
+    connectTimeout: 10_000,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
+    timezone: 'Z',
+    charset: 'utf8mb4',
+  });
+
+  return pool;
+}
+
+export async function pingDB() {
+  if (!pool) 
+    return false;
+  try {
+    const conn = await pool.getConnection();
+    await conn.ping();
+    conn.release();
+    return true;
+  } 
+  catch {
+    return false;
+  }
+}
+
+export async function query(sql, params = []) {
+  if (!pool) 
+    createPool();
+  const [rows] = await pool.execute(sql, params);
+  return rows;
+}
+
+export async function withTransaction(fn) {
+  if (!pool) 
+    createPool();
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const result = await fn(conn);
+    await conn.commit();
+    return result;
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Health check (every 30s while CONNECTED)
+// ═══════════════════════════════════════════════════════════════
+function startHealthCheck() {
+  if (healthTimer) 
+    return;
+
+  healthTimer = setInterval(async () => {
+    const alive = await pingDB();
+
+    if (alive) 
+    {
+      if (dbState !== DB_STATE.CONNECTED) 
+      {
+        dbState = DB_STATE.CONNECTED;
+        console.log('✅ DB health OK — state = CONNECTED');
+      }
+      return;
+    }
+
+    // DB lost during runtime
+    if (dbState === DB_STATE.CONNECTED) 
+    {
+      console.warn('⚠️  DB connection LOST during runtime');
+      dbState = DB_STATE.DISCONNECTED;
+      stopHealthCheck();
+      startReconnectLoop();
+    }
+  }, HEALTH_CHECK_INTERVAL_MS);
+}
+
+function stopHealthCheck() {
+  if (healthTimer) 
+  {
+    clearInterval(healthTimer);
+    healthTimer = null;
+    console.log('🛑 Health-check timer stopped');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Reconnect loop (every 30s while DISCONNECTED)
+// ═══════════════════════════════════════════════════════════════
+function startReconnectLoop() {
+  if (reconnectTimer) 
+    return;
+
+  dbState = DB_STATE.RECONNECTING;
+  console.log(`🔁 Reconnecting to MySQL every ${RECONNECT_INTERVAL_MS / 1000}s...`);
+
+  const attempt = async () => 
+  {
+    // Fresh pool — old connections are dead after a crash
+    if (pool) 
+    {
+      try { 
+        await pool.end(); 
+      }
+      catch 
+      { /* ignore */ }
+      pool = null;
+    }
+
+    createPool();
+    const ok = await pingDB();
+
+    if (ok) {
+      console.log('✅ DB reconnected successfully!');
+      dbState = DB_STATE.CONNECTED;
+      stopReconnectLoop();
+      startHealthCheck();
+    } 
+    else 
+    {
+      console.warn('❌ Reconnect attempt failed — will retry in 30s');
+    }
+  };
+
+  attempt();
+  reconnectTimer = setInterval(attempt, RECONNECT_INTERVAL_MS);
+}
+
+function stopReconnectLoop() {
+  if (reconnectTimer) {
+    clearInterval(reconnectTimer);
+    reconnectTimer = null;
+    console.log('🛑 Reconnect timer stopped');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// JSON fallback store
+// ═══════════════════════════════════════════════════════════════
+function loadJSONStore() {
+  if (inMemoryStore) 
+    return inMemoryStore;
 
   if (fs.existsSync(DATA_STORE_PATH)) {
     try {
       const raw = fs.readFileSync(DATA_STORE_PATH, 'utf8');
       inMemoryStore = JSON.parse(raw);
-      if (!inMemoryStore.departments || inMemoryStore.departments.length === 0) {
+      if (!inMemoryStore.departments || inMemoryStore.departments.length === 0) 
+      {
         inMemoryStore.departments = getInitialSeedData().departments;
       }
-      if (!inMemoryStore.approval_requests) {
+      if (!inMemoryStore.approval_requests) 
+      {
         inMemoryStore.approval_requests = getInitialSeedData().approval_requests || [];
       }
-      // Ensure all pre-existing users have approval_status defined
-      if (inMemoryStore.users) {
+      if (inMemoryStore.users) 
+      {
         inMemoryStore.users.forEach((u) => {
-          if (!u.approval_status) {
-            u.approval_status = 'APPROVED';
-          }
+          if (!u.approval_status) u.approval_status = 'APPROVED';
         });
       }
       persistDB();
-    } catch (e) {
-      console.warn('Could not read existing store file, initializing fresh:', e.message);
+    } 
+    catch (e) 
+    {
+      console.warn('Could not read store file, reseeding:', e.message);
       inMemoryStore = getInitialSeedData();
       persistDB();
     }
@@ -645,25 +698,74 @@ export function initDB() {
 }
 
 export function persistDB() {
-  if (!inMemoryStore) return;
+  if (!inMemoryStore) 
+    return;
   try {
     const dir = path.dirname(DATA_STORE_PATH);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    if (!fs.existsSync(dir)) 
+      fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(DATA_STORE_PATH, JSON.stringify(inMemoryStore, null, 2), 'utf8');
-  } catch (err) {
+  } 
+  catch (err) {
     console.error('Error writing data_store.json:', err.message);
   }
 }
 
 export function getDB() {
-  if (!inMemoryStore) {
-    initDB();
-  }
+  if (!inMemoryStore) 
+    loadJSONStore();
   return inMemoryStore;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Initializer + shutdown
+// ═══════════════════════════════════════════════════════════════
+export async function initDB() {
+  createPool();
+  const ok = await pingDB();
+
+  if (ok) {
+    dbState = DB_STATE.CONNECTED;
+    console.log('✅ MySQL connected');
+    console.log('🚀 Running on MySQL');
+    startHealthCheck();
+  } 
+  else 
+  {
+    dbState = DB_STATE.DISCONNECTED;
+    console.warn('⚠️  MySQL unavailable — JSON fallback active');
+    console.warn('🔁 Will retry connection every 30s in background');
+    startReconnectLoop();
+  }
+
+  loadJSONStore();
+  return { state: dbState, store: inMemoryStore };
+}
+
+export async function closePool() {
+  stopHealthCheck();
+  stopReconnectLoop();
+  if (pool) 
+    {
+    try 
+    { await pool.end(); } 
+    catch { /* ignore */ }
+    pool = null;
+  }
+  dbState = DB_STATE.DISCONNECTED;
+  console.log('MySQL pool closed & timers stopped');
 }
 
 export default {
   initDB,
   getDB,
   persistDB,
+  loadJSONStore,
+  createPool,
+  pingDB,
+  query,
+  withTransaction,
+  closePool,
+  getDBState,
+  isUsingMySQL,
 };

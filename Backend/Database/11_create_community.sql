@@ -1,7 +1,7 @@
 -- 11_create_community.sql
 -- Ward Community, Live Chat, and Announcements
 
-USE civic_grievance;
+USE kuraltn;
 
 CREATE TABLE IF NOT EXISTS ward_groups (
   id VARCHAR(36) PRIMARY KEY,

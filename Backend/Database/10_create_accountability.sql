@@ -1,7 +1,7 @@
 -- 10_create_accountability.sql
 -- Confidential Accountability Reports Isolated From Public Feeds
 
-USE civic_grievance;
+USE kuraltn;
 
 CREATE TABLE IF NOT EXISTS confidential_accountability_reports (
   id VARCHAR(36) PRIMARY KEY,

@@ -10,7 +10,8 @@ export const ENV = {
     PORT: parseInt(process.env.DB_PORT || '3306', 10),
     USER: process.env.DB_USER || 'root',
     PASSWORD: process.env.DB_PASSWORD || '',
-    NAME: process.env.DB_NAME || 'civic_grievance',
+    NAME: process.env.DB_NAME || 'kuraltn',
+    POOL_LIMIT: process.env.DB_POOL_LIMIT || 10,
   },
   JWT: {
     ACCESS_SECRET: process.env.JWT_ACCESS_SECRET || 'tn_civic_access_secret_key_prod_2026_secured',

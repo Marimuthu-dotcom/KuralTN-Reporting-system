@@ -1,7 +1,7 @@
 -- 03_create_geography.sql
 -- Administrative Hierarchy: Tamil Nadu -> District -> Local Body -> Ward
 
-USE civic_grievance;
+USE kuraltn;
 
 CREATE TABLE IF NOT EXISTS districts (
   id VARCHAR(36) PRIMARY KEY,
