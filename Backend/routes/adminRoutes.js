@@ -24,4 +24,15 @@ router.get('/audit-logs', adminController.getAuditLogs);
 router.get('/official-contacts', adminController.getOfficialContacts);
 router.post('/official-contacts', adminController.addOfficialContact);
 
+// Task 4: Invitation Management
+router.get('/invitations', adminController.getInvitations);
+router.post('/invitations', adminController.createInvitation);
+router.post('/invitations/:id/resend', adminController.resendInvitation);
+router.post('/invitations/:id/revoke', adminController.revokeInvitation);
+
+// Task 3: Citizen Ward Membership Requests
+router.get('/ward-requests', adminController.getWardRequests);
+router.post('/ward-requests/:id/approve', adminController.approveWardRequest);
+router.post('/ward-requests/:id/reject', adminController.rejectWardRequest);
+
 export default router;

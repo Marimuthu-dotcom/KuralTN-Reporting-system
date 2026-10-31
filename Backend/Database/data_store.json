@@ -2272,6 +2272,71 @@
       "is_revoked": false,
       "expires_at": "2026-10-30T05:50:58.353Z",
       "created_at": "2026-10-23T05:50:58.353Z"
+    },
+    {
+      "id": "rt-1793466708216",
+      "user_id": "user-citizen-anand",
+      "token_hash": "20fa2df89ecd2f2e2cc2540b60163fa184b259e7d02a35bf90ade910f4539a82",
+      "family_id": "fam-1793466708216",
+      "is_revoked": false,
+      "expires_at": "2026-11-07T17:11:48.216Z",
+      "created_at": "2026-10-31T17:11:48.216Z"
+    },
+    {
+      "id": "rt-1793466715020-tine",
+      "user_id": "user-admin-ramanathan",
+      "token_hash": "06b04843616d6348df6b6a33511b9c0517dc9fca5f7c5c0f2420e0f8818e9dd2",
+      "family_id": "fam-1793466715019",
+      "is_revoked": false,
+      "expires_at": "2026-11-07T17:11:55.020Z",
+      "created_at": "2026-10-31T17:11:55.020Z"
+    },
+    {
+      "id": "rt-1793466728552",
+      "user_id": "user-citizen-anand",
+      "token_hash": "82b1f5302eb5d3378fa9d4807955907987a6b8dfe93de4073d536dbb21a341a4",
+      "family_id": "fam-1793466728552",
+      "is_revoked": true,
+      "expires_at": "2026-11-07T17:12:08.552Z",
+      "created_at": "2026-10-31T17:12:08.552Z",
+      "revoked_at": "2026-10-31T17:12:08.574Z"
+    },
+    {
+      "id": "rt-1793466728575-5web",
+      "user_id": "user-citizen-anand",
+      "token_hash": "82b1f5302eb5d3378fa9d4807955907987a6b8dfe93de4073d536dbb21a341a4",
+      "family_id": "fam-1793466728552",
+      "is_revoked": true,
+      "expires_at": "2026-11-07T17:12:08.575Z",
+      "created_at": "2026-10-31T17:12:08.575Z",
+      "revoked_at": "2026-10-31T17:12:08.580Z"
+    },
+    {
+      "id": "rt-1793466728581-coi4",
+      "user_id": "user-citizen-anand",
+      "token_hash": "82b1f5302eb5d3378fa9d4807955907987a6b8dfe93de4073d536dbb21a341a4",
+      "family_id": "fam-1793466728552",
+      "is_revoked": false,
+      "expires_at": "2026-11-07T17:12:08.581Z",
+      "created_at": "2026-10-31T17:12:08.581Z"
+    },
+    {
+      "id": "rt-1793466734748",
+      "user_id": "user-1792303261918-k6sqp",
+      "token_hash": "14d99ba8ec3cf4db7e5439023bee7a66c639683cb2401d20137003bcee2c4d16",
+      "family_id": "fam-1793466734748",
+      "is_revoked": false,
+      "expires_at": "2026-11-07T17:12:14.748Z",
+      "created_at": "2026-10-31T17:12:14.748Z"
+    },
+    {
+      "id": "rt-1793466740838",
+      "user_id": "user-1792303261918-k6sqp",
+      "token_hash": "9f725946383d65aea1dcd022376839b7528076306b37e88b3c0bd78a0e8e14fc",
+      "family_id": "fam-1793466740838",
+      "is_revoked": false,
+      "expires_at": "2026-11-07T17:12:20.838Z",
+      "created_at": "2026-10-31T17:12:20.838Z"
     }
   ],
   "departments": [

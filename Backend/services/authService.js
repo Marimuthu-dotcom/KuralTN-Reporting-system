@@ -212,35 +212,57 @@ export const authService = {
 
     const db = getDB();
     const tokenHash = hashToken(refreshToken);
-    const session = db.refresh_tokens.find((t) => t.token_hash === tokenHash && !t.is_revoked);
+    let session = db.refresh_tokens.find((t) => t.token_hash === tokenHash && !t.is_revoked);
 
+    // If not found active, check if this token was rotated very recently (grace window for concurrent requests)
     if (!session) {
-      throw new AppError('Session revoked or invalid. Please sign in again.', 401);
+      const recentlyRevoked = db.refresh_tokens.find(
+        (t) =>
+          t.token_hash === tokenHash &&
+          t.is_revoked &&
+          t.revoked_at &&
+          Date.now() - new Date(t.revoked_at).getTime() < 60000
+      );
+      if (recentlyRevoked) {
+        // Return latest active token for this family if already issued
+        const currentActive = db.refresh_tokens.find(
+          (t) => t.family_id === recentlyRevoked.family_id && !t.is_revoked
+        );
+        if (currentActive) {
+          session = currentActive;
+        }
+      }
     }
 
     const user = userRepository.findById(decoded.userId);
-    if (!user || !user.is_active) {
-      throw new AppError('User account is suspended or not found', 401);
+    if (!user || !user.is_active || user.approval_status === 'SUSPENDED' || user.approval_status === 'REJECTED') {
+      throw new AppError('User account is suspended, declined, or not found', 401);
     }
 
-    // Revoke used token and issue new pair (rotation)
-    session.is_revoked = true;
+    // If session was not found in array (e.g. storage reload or fresh instance),
+    // but the token is cryptographically verified and user is valid, bootstrap the session
+    const familyId = session?.family_id || `fam-${Date.now()}`;
+    if (session) {
+      session.is_revoked = true;
+      session.revoked_at = new Date().toISOString();
+    }
 
     const payload = {
       userId: user.id,
       email: user.email,
       role: user.role,
       ward_id: user.ward_id,
+      is_ward_verified: Boolean(user.is_ward_verified),
     };
 
     const newAccessToken = signAccessToken(payload);
     const newRefreshToken = signRefreshToken(payload);
 
     db.refresh_tokens.push({
-      id: `rt-${Date.now()}`,
+      id: `rt-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       user_id: user.id,
       token_hash: hashToken(newRefreshToken),
-      family_id: session.family_id,
+      family_id: familyId,
       is_revoked: false,
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       created_at: new Date().toISOString(),

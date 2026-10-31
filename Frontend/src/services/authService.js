@@ -2,16 +2,64 @@
 import api, { setAccessToken } from './api.js';
 
 export const authService = {
-  async loginWithGoogle(credential, demoUserId = null) {
-    const res = await api.post('/auth/google', {
-      credential,
-      demo_user_id: demoUserId,
+  async register({ full_name, email, username, password, confirm_password }) {
+    const res = await api.post('/auth/register', {
+      full_name,
+      email,
+      username,
+      password,
+      confirm_password,
     });
     const { user, accessToken, refreshToken, authStatus, redirectTo } = res.data.data;
     setAccessToken(accessToken);
     if (user) localStorage.setItem('civic_user', JSON.stringify(user));
     if (refreshToken) localStorage.setItem('civic_refresh_token', refreshToken);
     return { user, accessToken, refreshToken, authStatus, redirectTo };
+  },
+
+  async login({ identifier, password }) {
+    const res = await api.post('/auth/login', {
+      identifier,
+      password,
+    });
+    const { user, accessToken, refreshToken, authStatus, redirectTo } = res.data.data;
+    setAccessToken(accessToken);
+    if (user) localStorage.setItem('civic_user', JSON.stringify(user));
+    if (refreshToken) localStorage.setItem('civic_refresh_token', refreshToken);
+    return { user, accessToken, refreshToken, authStatus, redirectTo };
+  },
+
+  async loginWithGoogle(credential, demoUserId = null, mode = 'register', invitationToken = null) {
+    const res = await api.post('/auth/google', {
+      credential,
+      demo_user_id: demoUserId,
+      mode,
+      invitation_token: invitationToken,
+    });
+    const { user, accessToken, refreshToken, authStatus, redirectTo } = res.data.data;
+    setAccessToken(accessToken);
+    if (user) localStorage.setItem('civic_user', JSON.stringify(user));
+    if (refreshToken) localStorage.setItem('civic_refresh_token', refreshToken);
+    return { user, accessToken, refreshToken, authStatus, redirectTo };
+  },
+
+  async getInvitation(token) {
+    const res = await api.get(`/auth/invitation/${encodeURIComponent(token)}`);
+    return res.data.data;
+  },
+
+  async acceptInvitation({ token, password, full_name, username }) {
+    const res = await api.post('/auth/invitation/accept', {
+      token,
+      password,
+      full_name,
+      username,
+    });
+    const { user, accessToken, refreshToken, redirectTo } = res.data.data;
+    setAccessToken(accessToken);
+    if (user) localStorage.setItem('civic_user', JSON.stringify(user));
+    if (refreshToken) localStorage.setItem('civic_refresh_token', refreshToken);
+    return { user, accessToken, refreshToken, redirectTo };
   },
 
   async refreshToken(overrideToken = null) {

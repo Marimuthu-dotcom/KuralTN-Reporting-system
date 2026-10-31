@@ -33,12 +33,11 @@ export function AuthProvider({ children }) {
   // Handle token refresh failure from axios interceptor
   useEffect(() => {
     setTokenRefreshFailedCallback(() => {
-      // Only clear if no valid cached user exists or explicitly revoked
-      const stored = localStorage.getItem('civic_user');
-      if (!stored) {
-        setUser(null);
-        setAccessTokenState(null);
-      }
+      localStorage.removeItem('civic_refresh_token');
+      localStorage.removeItem('civic_access_token');
+      localStorage.removeItem('civic_user');
+      setUser(null);
+      setAccessTokenState(null);
     });
   }, []);
 

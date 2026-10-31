@@ -8,10 +8,16 @@ import { getDB, persistDB } from '../config/db.js';
 export const communityService = {
   async getWardMessages(user, wardId) {
     if (user.role === 'CITIZEN') {
-      if (!user.is_ward_verified || user.ward_verification_status !== 'VERIFIED') {
+      const isVerified = Boolean(
+        user.is_ward_verified ||
+        user.ward_verification_status === 'VERIFIED' ||
+        (user.approval_status === 'APPROVED' && (user.ward_id === wardId || user.verified_ward_id === wardId))
+      );
+      if (!isVerified) {
         throw new AppError('Private ward community messages are restricted to verified residents whose address has been approved.', 403);
       }
-      if (user.ward_id !== wardId) {
+      const userWard = user.verified_ward_id || user.ward_id;
+      if (userWard && userWard !== wardId) {
         throw new AppError('Participation and message history are restricted to verified members of this ward.', 403);
       }
     }
@@ -20,10 +26,16 @@ export const communityService = {
 
   async postWardMessage(user, wardId, { message_text, complaint_ref_link }) {
     if (user.role === 'CITIZEN') {
-      if (!user.is_ward_verified || user.ward_verification_status !== 'VERIFIED') {
+      const isVerified = Boolean(
+        user.is_ward_verified ||
+        user.ward_verification_status === 'VERIFIED' ||
+        (user.approval_status === 'APPROVED' && (user.ward_id === wardId || user.verified_ward_id === wardId))
+      );
+      if (!isVerified) {
         throw new AppError('Posting messages in the ward community is restricted to verified residents.', 403);
       }
-      if (user.ward_id !== wardId) {
+      const userWard = user.verified_ward_id || user.ward_id;
+      if (userWard && userWard !== wardId) {
         throw new AppError('You cannot send messages to a ward where you are not a registered verified member.', 403);
       }
     }

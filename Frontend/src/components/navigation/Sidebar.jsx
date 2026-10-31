@@ -19,6 +19,7 @@ import {
   Building,
   UserCheck,
   Megaphone,
+  Mail,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -94,6 +95,7 @@ export function Sidebar({ className = '' }) {
     { to: '/admin', label: isTamil ? 'நிர்வாக அறை' : 'Admin Dashboard', icon: BarChart3 },
     { to: '/complaints', label: t('navPublicFeed'), icon: Building },
     { to: '/departments', label: isTamil ? 'அரசு துறைகள்' : 'Civic Departments', icon: Briefcase },
+    { to: '/admin/invitations', label: isTamil ? 'அழைப்பு மேலாண்மை' : 'Staff Invitations', icon: Mail },
     { to: '/admin/users', label: isTamil ? 'பயனர் & பொறுப்புகள்' : 'User Directory', icon: Users },
     { to: '/admin/districts', label: isTamil ? 'மாவட்டங்கள் & வார்டுகள்' : 'Districts & Geography', icon: Building },
     { to: '/admin/categories', label: isTamil ? 'புகார் வகைகள்' : 'Complaint Categories', icon: FileText },

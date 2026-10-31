@@ -26,5 +26,15 @@ export const userService = {
     const res = await api.post('/users/verify-phone-otp', { phone, otp });
     return res.data.data;
   },
+
+  async submitWardMembershipRequest(data) {
+    const res = await api.post('/users/me/ward-request', data);
+    return res.data.data;
+  },
+
+  async getWardMembershipStatus() {
+    const res = await api.get('/users/me/ward-status');
+    return res.data.data;
+  },
 };
 

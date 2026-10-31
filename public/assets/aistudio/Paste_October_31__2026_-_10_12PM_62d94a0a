@@ -1,0 +1,813 @@
+# KuralTN – Existing Project Enhancement: Dashboard UI, Authentication & Role-Based Invitation System
+
+## Project Context
+
+I am developing an existing web application named **KuralTN – AI-Powered Civic Grievance Reporting and Community Issue Resolution System**.
+
+The project is already implemented with frontend, backend, database, authentication, and role-based portals.
+
+I want to enhance the existing application by modifying specific UI components and implementing a proper authentication and user onboarding workflow.
+
+**IMPORTANT: This is an existing project. Do not build a new application from scratch. Do not replace the existing architecture or unnecessarily rewrite existing modules.**
+
+Before making any modifications:
+
+1. Analyze the existing frontend and backend architecture.
+2. Understand the existing authentication implementation.
+3. Identify the current user roles and their permissions.
+4. Examine the existing database schema and relationships.
+5. Understand how users navigate between different portals.
+6. Identify reusable components, APIs, middleware, and existing authentication services.
+
+Modify only the necessary files and preserve all existing working functionality.
+
+---
+
+# TASK 1: Improve the Dashboard Header and Remove Duplicate Information
+
+Refer to the first attached screenshot of the Ward Councillor dashboard.
+
+### Problem 1: Unnecessary black information bar
+
+Currently, a black horizontal information bar is displayed at the very top of the dashboard.
+
+It contains information such as:
+
+- Active Persona
+- Ward Councillor name
+- Active role
+- Ward Councillor middleware workflow information
+- Citizen → Councillor → Department workflow
+
+This information is unnecessary because the user's identity and role are already displayed in the profile section.
+
+**Required modification:**
+
+- Completely remove this black information bar.
+- Remove the same black information bar wherever it appears across other role-based portals.
+- Ensure it is removed consistently from Citizen, Ward Councillor, Department Staff, and System Administrator dashboards.
+- Do not remove useful functionality or authentication-related logic associated with the header.
+
+### Problem 2: Duplicate website name and role
+
+Currently, the website name (KuralTN) and role information are displayed in two places.
+
+The website logo and name are already available in the sidebar.
+
+**Required modification:**
+
+- Remove the duplicate KuralTN logo and website name from the main content header.
+- Remove the duplicate role label displayed beside the website name.
+- Retain the website branding in the sidebar.
+- Retain the user's name, profile picture, and role information in the profile section.
+- Preserve the language selector, notifications, profile dropdown, and other useful navigation elements.
+
+### Expected result
+
+Create a clean and minimal dashboard layout.
+
+The dashboard should not repeat information that is already available elsewhere.
+
+Apply the same design principle consistently across all role-based portals.
+
+---
+
+# TASK 2: Implement a Proper Citizen Registration and Login System
+
+Refer to the second attached screenshot of the existing login page.
+
+### Current problem
+
+The current authentication page contains:
+
+- Continue with Google button.
+- Static demonstration user accounts.
+- Citizen, Ward Councillor, Department Staff, and System Administrator demonstration accounts.
+
+There is no proper distinction between new user registration and existing user login.
+
+I want to implement two separate authentication pages:
+
+1. Citizen Registration Page
+2. Citizen Login Page
+
+## 2.1 Citizen Registration Page
+
+**Default behavior:**
+
+When a new user opens the authentication page without an existing authenticated session, display the Registration Page by default.
+
+The registration page must contain:
+
+### A. Google OAuth Registration
+
+Display a Continue with Google button.
+
+Google OAuth should support both new user registration and existing user authentication.
+
+Expected behavior:
+
+- If the Google account is being used for the first time, create a new Citizen account.
+- If the Google account is already registered, authenticate the existing Citizen account.
+- Do not create duplicate accounts for the same verified Google email.
+- Never allow Google OAuth registration to create Ward Councillor, Department Staff, or System Administrator accounts.
+
+### B. Manual Registration Form
+
+Provide a registration form containing the necessary fields:
+
+- Full Name
+- Email Address
+- Username
+- Password
+- Confirm Password
+
+Implement appropriate validation:
+
+- All required fields must be validated.
+- Email must have a valid format.
+- Email must be unique.
+- Username must be unique.
+- Password must satisfy appropriate security requirements.
+- Confirm Password must match Password.
+- Display meaningful validation and error messages.
+
+Only collect information required to create the initial account.
+
+Do not unnecessarily request ward details or residential information during account registration.
+
+### C. Navigation to Login
+
+At the bottom of the registration form, display this message:
+
+"Already have an account? Log in"
+
+When the user clicks the Log in link, navigate to the Citizen Login Page.
+
+## 2.2 Citizen Login Page
+
+This page is exclusively for users who have already registered.
+
+It should contain:
+
+### A. Google OAuth Login
+
+Provide the same Continue with Google button.
+
+If the Google account is already registered, authenticate the existing account.
+
+If the account does not exist, do not silently create an account from the Login Page. Direct the user to the Registration Page.
+
+### B. Manual Login Form
+
+Required fields:
+
+- Email Address or Username
+- Password
+
+Include:
+
+- Login button
+- Forgot Password link (if supported by the existing authentication architecture)
+- Registration navigation link
+
+At the bottom, display:
+
+"Don't have an account? Register"
+
+Clicking Register should navigate to the Registration Page.
+
+## 2.3 Google OAuth: Shared Authentication Logic
+
+Google OAuth must work on both Registration and Login Pages.
+
+Use a common OAuth authentication implementation instead of creating two separate Google authentication systems.
+
+The backend should identify whether the Google account belongs to:
+
+- A new user
+- An existing Citizen
+- An invited Ward Councillor
+- An invited Department Staff member
+- An existing System Administrator
+
+Apply role-specific authorization rules after successful identity verification.
+
+An existing invited employee must be able to authenticate through the Google account associated with their invitation.
+
+Do not allow users to change their role through the frontend.
+
+## 2.4 Role Restrictions
+
+There are four roles in the application:
+
+1. Citizen
+2. Ward Councillor
+3. Department Staff
+4. System Administrator
+
+The registration process must be restricted as follows:
+
+**Citizen:**
+- Citizens can register independently.
+- Citizens can use manual registration or Google OAuth.
+- Every newly registered public account must receive the Citizen role.
+- Citizens must never be able to select or assign themselves another role.
+
+**Ward Councillor:**
+- Cannot register through the public registration form.
+- Must receive an invitation from the System Administrator.
+
+**Department Staff:**
+- Cannot register through the public registration form.
+- Must receive an invitation from the System Administrator.
+
+**System Administrator:**
+- Cannot register through the public registration form.
+- Existing authorized System Administrator account creation and management mechanisms must remain protected.
+
+Enforce these restrictions in the backend, not just through frontend UI restrictions.
+
+---
+
+# TASK 3: Implement Citizen Ward Membership Verification
+
+After successful Citizen authentication, redirect the user to the Citizen Portal.
+
+However, authentication and ward membership are two different processes.
+
+A successfully registered Citizen is not automatically a member of any ward community.
+
+Implement the following workflow.
+
+## 3.1 Citizen Authentication
+
+After successful registration or login:
+
+- Create or authenticate the Citizen account.
+- Redirect the Citizen to the Citizen Portal.
+- Allow the Citizen to access the general portal.
+- Check whether the Citizen has already submitted a ward membership request.
+- Check whether the request is pending, approved, or rejected.
+
+Do not automatically assign ward membership during registration.
+
+## 3.2 Ward Community Membership Request
+
+Inside the Citizen Portal, provide a section for joining the appropriate Ward Community.
+
+Display a form requesting the necessary residential and contact information.
+
+Required fields:
+
+- Full Name (prepopulate from the registered account where possible)
+- Phone Number
+- Residential Address
+- District
+- Ward Number
+
+Validate all required information before submission.
+
+The Citizen must select their actual residential ward.
+
+## 3.3 Membership Request Submission
+
+When the Citizen submits the form:
+
+1. Send the request to the backend.
+2. Save the request in the database.
+3. Associate it with the authenticated Citizen ID.
+4. Set the initial membership status to Pending.
+5. Make the request available in the System Administrator portal for verification.
+
+Do not automatically add the Citizen to a ward group after form submission.
+
+## 3.4 System Administrator Verification
+
+The System Administrator must have the ability to:
+
+- View pending ward membership requests.
+- View the Citizen's submitted information.
+- Verify the residential address and ward information.
+- Approve the request.
+- Reject the request.
+- Provide a rejection reason when necessary.
+
+When approved:
+
+- Update the membership status to Approved.
+- Associate the Citizen with the verified ward.
+- Add the Citizen to the corresponding ward community.
+- Enable access to the relevant ward-specific features.
+
+When rejected:
+
+- Keep the Citizen outside the ward community.
+- Display the rejection status and reason.
+- Allow the Citizen to correct the information and submit another request where appropriate.
+
+Prevent duplicate active membership requests and conflicting ward memberships.
+
+## 3.5 Ward Group Access Restrictions
+
+Ward membership must be enforced throughout the application.
+
+A Citizen who has not received approval must not be treated as a member of any ward group.
+
+Implement the following restrictions:
+
+| Feature | Before Ward Approval | After Ward Approval |
+|---|---|---|
+| Citizen Portal | Accessible | Accessible |
+| Personal Profile | Accessible | Accessible |
+| Ward Community | Restricted | Accessible |
+| Ward Announcements | Restricted | Accessible |
+| Ward Notifications | Restricted | Accessible |
+| Ward Discussions | Restricted | Accessible |
+| Community Support | Restricted | Accessible |
+| Ward-specific information | Restricted | Accessible according to permissions |
+
+Important:
+
+- Pending Citizens must not receive ward-specific announcements or notifications.
+- Rejected Citizens must not receive ward-specific announcements or notifications.
+- Only approved members of Ward 43 should receive Ward 43 community information.
+- Ward 43 members must not receive Ward 44 or Ward 45 private community information.
+- Apply the same restriction to all wards.
+
+Implement these checks on both frontend and backend.
+
+Do not rely only on hiding menu items. Unauthorized API requests must also be rejected.
+
+## 3.6 Membership Status UI
+
+Display the appropriate membership status in the Citizen Portal.
+
+Possible statuses:
+
+- Not Submitted
+- Pending Verification
+- Approved – Ward Member
+- Rejected
+
+Show a suitable message based on the current status.
+
+For example:
+
+Pending:
+"Your ward membership request has been submitted and is awaiting verification by the System Administrator."
+
+Approved:
+"Your ward membership has been approved. You can now access your Ward Community."
+
+Rejected:
+"Your ward membership request was rejected. Please review the reason and update your information."
+
+Do not display unnecessary ward-specific notifications to users who are not approved members.
+
+---
+
+# TASK 4: Implement an Invitation Management Page in the System Administrator Portal
+
+### Current problem
+
+The existing System Administrator portal does not have a dedicated Invitation Management page.
+
+However, the application requires a controlled registration process for government employees.
+
+Ward Councillors and Department Staff should not create accounts through public Citizen registration.
+
+The System Administrator must be responsible for inviting these users.
+
+## 4.1 Create an Invitation Management Page
+
+Add a new page or navigation item named:
+
+**Invitation Management**
+
+It should be available only inside the System Administrator portal.
+
+The page must support two invitation types:
+
+1. Ward Councillor Invitation
+2. Department Staff Invitation
+
+## 4.2 Create and Send Invitations
+
+Provide an invitation form with the following fields.
+
+### Ward Councillor Invitation
+
+- Full Name
+- Professional Email Address
+- Assigned District
+- Assigned Ward Number
+- Role: Ward Councillor
+
+### Department Staff Invitation
+
+- Full Name
+- Professional Email Address
+- Department Name
+- Designation
+- Role: Department Staff
+
+The role should be assigned by the System Administrator.
+
+Do not allow the invited user to change their role during registration.
+
+## 4.3 Invitation Workflow
+
+Implement the following workflow:
+
+1. System Administrator opens Invitation Management.
+2. Selects Ward Councillor or Department Staff.
+3. Enters the required professional information.
+4. Submits the invitation.
+5. Backend generates a secure, unique invitation token.
+6. Backend stores the invitation details and status in the database.
+7. Send an invitation email to the specified professional email address.
+8. The email contains a unique registration link.
+9. The invited employee opens the invitation link.
+10. The system validates the invitation token.
+11. The invited employee creates an account using the invited email address.
+12. The system verifies that the account email matches the invitation email.
+13. Assign the role and associated organizational information from the verified invitation.
+14. Activate the account.
+15. Redirect the user to their appropriate portal.
+
+For example:
+
+- Ward Councillor → Ward Councillor Portal.
+- Department Staff → Department Staff Portal.
+
+The invitation link must not allow users to register with a different email address.
+
+## 4.4 Invitation Security
+
+Implement secure invitation handling:
+
+- Use cryptographically secure random tokens.
+- Store hashed invitation tokens in the database.
+- Give invitations an expiry period.
+- Allow each invitation to be used only once.
+- Provide invitation status tracking.
+- Prevent unauthorized role assignment.
+- Allow System Administrators to revoke pending invitations.
+- Support resending expired or pending invitations through a secure process.
+- Prevent duplicate active invitations for the same email and role.
+
+Suggested invitation statuses:
+
+- Pending
+- Accepted
+- Expired
+- Revoked
+
+Only authorized System Administrators should be able to create, view, revoke, and manage invitations.
+
+## 4.5 Invitation Management Dashboard
+
+Display dynamically retrieved invitation information.
+
+Suggested columns:
+
+| Name | Email | Role | Assigned Ward / Department | Invitation Status | Created Date | Actions |
+|---|---|---|---|---|---|---|
+
+Include:
+
+- Search
+- Role filtering
+- Status filtering
+- View invitation details
+- Resend invitation
+- Revoke invitation
+
+Do not use static or hardcoded invitation records.
+
+All information must come from the backend database.
+
+---
+
+# TASK 5: Maintain the Test Persona Feature During Development
+
+Currently, the authentication page contains a demonstration section named:
+
+"OR QUICK TEST WITH DEMONSTRATION PERSONA"
+
+It displays demonstration users such as:
+
+- Anand Kumar – Citizen
+- Councillor M. Senthil Nathan – Ward Councillor
+- Er. K. Murugan – Department Staff
+- K. Ramanathan – System Administrator
+
+I am currently developing and testing the application.
+
+**Do not remove this feature at this stage.**
+
+Requirements:
+
+- Retain the Test Persona dropdown or demonstration login feature.
+- Ensure each demonstration persona can access its corresponding portal.
+- Use it to test role-based functionality.
+- Ensure the demonstration accounts use valid backend authentication rather than frontend-only role switching.
+- Keep this feature restricted to development/testing environments.
+- It must not be available in the production environment.
+- Do not use demonstration personas as a replacement for real registration, login, or invitation workflows.
+
+The existing Test Persona functionality must continue working independently of the new authentication implementation.
+
+---
+
+# TASK 6: Database and Backend Integration
+
+All new functionality must be connected to the existing backend and MySQL database.
+
+Do not implement frontend-only demonstrations.
+
+Before modifying the database:
+
+1. Inspect the existing tables.
+2. Understand existing foreign key relationships.
+3. Identify reusable user, role, ward, and authentication tables.
+4. Reuse existing structures wherever possible.
+5. Add only the necessary tables, columns, and relationships.
+6. Avoid duplicate data structures.
+
+Potential database entities to consider:
+
+- Users
+- Roles
+- Wards
+- Ward Membership Requests
+- Ward Memberships
+- Invitations
+- Departments
+- Authentication Providers
+
+These are conceptual entities, not instructions to create duplicate tables if equivalent structures already exist.
+
+Ensure:
+
+- Proper primary and foreign keys.
+- Unique constraints where necessary.
+- Appropriate indexes.
+- Secure password hashing.
+- Transaction-safe membership approval.
+- Transaction-safe invitation acceptance.
+- Correct user-role relationships.
+- Proper error handling.
+
+Use the existing API architecture and Axios configuration.
+
+Do not introduce unnecessary API clients or duplicate authentication services.
+
+If database migrations are required, provide the migration SQL and preserve existing data.
+
+---
+
+# TASK 7: Dynamic Data – No Unnecessary Static Data
+
+This is a major requirement.
+
+I want KuralTN to behave like a real-world application rather than a static demonstration website.
+
+Avoid hardcoded:
+
+- User names
+- Email addresses
+- Ward membership records
+- Invitation records
+- Authentication status
+- Role assignments
+- Notification records
+- Community membership information
+- Dashboard statistics
+
+All these details must be retrieved from the backend and database.
+
+Use real authenticated user information.
+
+Use dynamic data for:
+
+- Current user profile.
+- Current user's role.
+- Ward membership status.
+- Membership requests.
+- Pending invitation records.
+- Accepted invitations.
+- Ward information.
+- Notifications.
+- Dashboard information.
+
+Static UI labels, design constants, and predefined application configuration are acceptable.
+
+Do not unnecessarily remove existing demonstration accounts needed for development testing.
+
+---
+
+# TASK 8: Security and Authorization Requirements
+
+Authentication and authorization must be handled separately.
+
+Implement the following rules:
+
+1. Authentication verifies who the user is.
+2. Authorization verifies what the authenticated user can access.
+3. Citizen registration must always assign the Citizen role on the backend.
+4. Employees must obtain their roles through verified invitations.
+5. Users must not be able to modify their roles through API requests.
+6. Ward membership requires System Administrator approval.
+7. Ward-specific data must be protected at the API level.
+8. Validate invitation tokens on the backend.
+9. Use secure password hashing.
+10. Follow the existing JWT and HTTP-only refresh cookie architecture.
+11. Never store refresh tokens in localStorage.
+12. Protect administrator routes and APIs.
+13. Validate ownership of membership requests.
+14. Prevent unauthorized access to another ward's private information.
+
+Do not weaken existing authentication or authorization protections while implementing these features.
+
+---
+
+# TASK 9: UI/UX Design Requirements
+
+Maintain the existing KuralTN design language.
+
+The updated interface should be:
+
+- Clean and professional.
+- Minimal and consistent.
+- Responsive across desktop, tablet, and mobile.
+- Easy for non-technical Citizens and government employees to understand.
+- Consistent across all role-based portals.
+
+For the authentication pages:
+
+- Keep Google OAuth visually prominent.
+- Separate registration and login clearly.
+- Use appropriate form labels.
+- Provide clear validation messages.
+- Provide loading indicators during authentication.
+- Prevent repeated form submissions.
+- Display meaningful success and error notifications.
+- Provide clear navigation between Login and Registration.
+
+For the System Administrator portal:
+
+- Add Invitation Management without unnecessarily redesigning the existing sidebar.
+- Use appropriate status indicators.
+- Provide clear actions for managing invitations and membership requests.
+
+Do not redesign unrelated dashboard pages.
+
+---
+
+# TASK 10: Implementation Strategy
+
+Implement the changes incrementally.
+
+Do not modify everything at once.
+
+Follow this implementation order:
+
+**Phase 1 – Dashboard UI Cleanup**
+- Remove the unnecessary black top information bar.
+- Remove duplicate website branding.
+- Remove duplicate role information.
+- Verify all four role-based dashboards.
+
+**Phase 2 – Citizen Authentication**
+- Implement separate Registration and Login pages.
+- Implement manual registration.
+- Implement manual login.
+- Integrate Google OAuth with both pages.
+- Enforce Citizen-only public registration.
+- Preserve the Test Persona feature.
+
+**Phase 3 – Citizen Ward Membership**
+- Implement the ward membership request form.
+- Connect the form to the backend.
+- Implement membership status tracking.
+- Implement System Administrator approval and rejection.
+- Enforce ward-specific access restrictions.
+
+**Phase 4 – Invitation Management**
+- Create the System Administrator Invitation Management page.
+- Implement invitation creation.
+- Integrate email delivery.
+- Implement secure invitation acceptance.
+- Assign the correct role and portal after acceptance.
+
+**Phase 5 – Integration and Testing**
+- Test all authentication flows.
+- Test Google OAuth for new and existing accounts.
+- Test invitation acceptance.
+- Test ward membership approval.
+- Test ward-specific data isolation.
+- Test the existing demonstration personas.
+- Verify that all data is dynamically retrieved.
+- Verify that existing features continue working.
+
+After each phase, verify that the existing application still works before proceeding.
+
+---
+
+# TASK 11: Required Testing Scenarios
+
+Do not consider the implementation complete until these scenarios work.
+
+### Citizen Authentication
+
+1. New Citizen registers using email and password.
+2. New Citizen registers using Google OAuth.
+3. Existing Citizen logs in using email and password.
+4. Existing Citizen logs in using Google OAuth.
+5. Existing Google account does not create duplicate users.
+6. Unregistered account cannot use the Login flow to bypass registration.
+7. Citizen cannot assign themselves an employee or administrator role.
+
+### Ward Membership
+
+8. Newly registered Citizen can access the Citizen Portal.
+9. Citizen without ward membership cannot access ward-specific information.
+10. Citizen submits a ward membership request.
+11. System Administrator receives the request.
+12. System Administrator approves the request.
+13. Citizen gains access to the correct ward group.
+14. System Administrator rejects the request.
+15. Rejected Citizen cannot access ward-specific information.
+16. Ward 43 Citizen cannot access private Ward 44 information.
+
+### Invitation Management
+
+17. System Administrator sends a Ward Councillor invitation.
+18. Invited Ward Councillor receives the invitation email.
+19. Ward Councillor accepts the invitation using the invited email.
+20. Ward Councillor receives the correct role and ward assignment.
+21. Ward Councillor can access the Ward Councillor Portal.
+22. Repeat the same process for Department Staff.
+23. Expired invitation cannot be accepted.
+24. Revoked invitation cannot be accepted.
+25. Invitation cannot be used twice.
+26. Uninvited users cannot register as Ward Councillor or Department Staff.
+
+### Existing Functionality
+
+27. All existing Test Persona accounts continue working.
+28. All existing role-based dashboards remain functional.
+29. Existing navigation and features are not broken.
+30. All newly implemented information is dynamically retrieved from the database.
+
+---
+
+# FINAL DEVELOPMENT INSTRUCTIONS
+
+Before starting implementation, inspect the existing project and provide a short analysis of:
+
+1. Current frontend structure.
+2. Current backend authentication architecture.
+3. Existing database schema.
+4. Existing role-based routing and authorization.
+5. Existing Google OAuth implementation.
+6. Existing Test Persona implementation.
+7. Files and modules that need modification.
+
+Then implement the requested changes using the existing architecture.
+
+**Strict restrictions:**
+
+- Do not build a new project.
+- Do not replace the existing frontend or backend.
+- Do not unnecessarily redesign the entire application.
+- Do not remove existing working features.
+- Do not introduce unnecessary dependencies.
+- Do not use TypeScript.
+- Use JavaScript and JSX only.
+- Use npm for package management.
+- Use the existing MySQL database.
+- Use the existing API and Axios architecture.
+- Do not use hardcoded data as a substitute for backend integration.
+- Do not introduce duplicate authentication systems.
+- Do not implement frontend-only authorization.
+
+If an existing feature already supports part of the requested functionality, extend and reuse it rather than rebuilding it.
+
+If any requested functionality conflicts with the current architecture, explain the conflict before making a breaking change.
+
+**Final objective:**
+
+Transform the existing KuralTN application into a more realistic, secure, dynamic, and professionally structured civic grievance platform with:
+
+1. A clean dashboard interface.
+2. Separate Citizen Registration and Login pages.
+3. Google OAuth support for both registration and login.
+4. Secure Citizen ward membership verification.
+5. Administrator-controlled Ward Councillor and Department Staff invitations.
+6. Proper role-based portal access.
+7. Dynamic database-driven information.
+
+Preserve the existing project and modify only what is necessary to achieve these requirements.

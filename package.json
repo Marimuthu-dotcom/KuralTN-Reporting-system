@@ -8,13 +8,13 @@
     "Backend"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=Backend",
-    "dev:frontend": "npm run dev --workspace=Frontend",
-    "dev:backend": "npm run dev --workspace=Backend",
-    "build": "npm run build --workspace=Frontend",
-    "preview": "npm run preview --workspace=Frontend",
-    "start": "npm run start --workspace=Backend",
-    "test": "npm run test --workspace=Backend"
+    "dev": "npm --prefix Backend run dev",
+    "dev:frontend": "npm --prefix Frontend run dev",
+    "dev:backend": "npm --prefix Backend run dev",
+    "build": "npm --prefix Frontend run build",
+    "preview": "npm --prefix Frontend run preview",
+    "start": "npm --prefix Backend run start",
+    "test": "npm --prefix Backend run test"
   }
 }
 

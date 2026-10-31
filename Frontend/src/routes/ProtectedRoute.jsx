@@ -28,10 +28,9 @@ export function ProtectedRoute({ children }) {
     return <Navigate to="/pending-approval" replace />;
   }
 
-  // If citizen has incomplete personal details, guide them to onboarding
+  // If user explicitly has incomplete external registration details
   if (
-    user?.role === 'CITIZEN' &&
-    (!user?.ward_id || !user?.address_line || user?.registration_status === 'PENDING_DETAILS') &&
+    user?.registration_status === 'PENDING_DETAILS' &&
     location.pathname !== '/onboarding'
   ) {
     return <Navigate to="/onboarding" replace />;

@@ -20,7 +20,6 @@ import { LanguageToggle } from '../common/LanguageToggle';
 import { AnimatedShield } from '../common/AnimatedIcons';
 import { KuralLogo } from '../common/KuralLogo';
 import { DEMO_ACCOUNTS } from '../../utils/constants';
-import { DemoRoleBar } from './DemoRoleBar';
 
 export function Navbar({ onMobileMenuToggle, title }) {
   const { user, loginWithGoogle, logout, isAuthenticated } = useAuth();
@@ -98,31 +97,42 @@ export function Navbar({ onMobileMenuToggle, title }) {
 
   return (
     <div className="sticky top-0 z-40">
-      <DemoRoleBar />
       <header className="h-16 bg-white border-b border-[#E7E5E4] px-3 sm:px-6 flex items-center justify-between">
         {/* Left side: Mobile menu toggle + page heading */}
         <div className="flex items-center gap-2 sm:gap-3">
-        {onMobileMenuToggle && (
-          <button
-            type="button"
-            onClick={onMobileMenuToggle}
-            className="md:hidden p-2 text-[#737373] hover:text-[#171717] rounded-lg hover:bg-neutral-100"
-            aria-label="Toggle menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-        )}
-        <Link to={homePath} className="group flex items-center gap-2.5 shrink-0">
-          <KuralLogo size="sm" showTagline={false} />
-          {title && title !== t('brandName') && title !== 'KuralTN' && (
-            <div className="hidden sm:flex items-center border-l border-[#E7E5E4] pl-2.5 ml-1">
-              <span className="text-xs font-bold text-[#171717] truncate max-w-[200px]">
-                {title}
-              </span>
-            </div>
+          {onMobileMenuToggle && (
+            <button
+              type="button"
+              onClick={onMobileMenuToggle}
+              className="md:hidden p-2 text-[#737373] hover:text-[#171717] rounded-lg hover:bg-neutral-100"
+              aria-label="Toggle menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
           )}
-        </Link>
-      </div>
+
+          {/* When authenticated (sidebar already present with logo), show only clean page title. Otherwise show logo. */}
+          {isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              {title && (
+                <h1 className="text-sm sm:text-base font-bold text-[#171717] truncate">
+                  {title}
+                </h1>
+              )}
+            </div>
+          ) : (
+            <Link to={homePath} className="group flex items-center gap-2.5 shrink-0">
+              <KuralLogo size="sm" showTagline={false} />
+              {title && title !== t('brandName') && title !== 'KuralTN' && (
+                <div className="hidden sm:flex items-center border-l border-[#E7E5E4] pl-2.5 ml-1">
+                  <span className="text-xs font-bold text-[#171717] truncate max-w-[200px]">
+                    {title}
+                  </span>
+                </div>
+              )}
+            </Link>
+          )}
+        </div>
 
       {/* Center Nav tabs: Only shown when user is NOT logged in. Logged-in users access these via the sidebar. */}
       {!isAuthenticated && location.pathname !== '/login' && (

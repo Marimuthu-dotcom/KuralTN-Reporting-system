@@ -1,7 +1,6 @@
-// Backend/middleware/authenticate.js
 import { verifyAccessToken } from '../utils/tokenUtils.js';
 import { AppError } from '../utils/AppError.js';
-import { getDB } from '../config/db.js';
+import { userRepository } from '../repositories/userRepository.js';
 
 export function authenticate(req, res, next) {
   try {
@@ -16,10 +15,9 @@ export function authenticate(req, res, next) {
     }
 
     const decoded = verifyAccessToken(token);
-    const db = getDB();
-    const user = db.users.find((u) => u.id === decoded.userId && u.is_active);
+    const user = userRepository.findById(decoded.userId);
 
-    if (!user) {
+    if (!user || !user.is_active) {
       return next(new AppError('User belonging to this token no longer exists or is inactive.', 401));
     }
 

@@ -14,7 +14,7 @@ router.get('/:id/members', wardController.getMembers);
 // Ward chat messages & announcements
 router.get('/:id/messages', authenticate, communityController.getMessages);
 router.post('/:id/messages', authenticate, communityController.sendMessage);
-router.get('/:id/announcements', communityController.getAnnouncements);
+router.get('/:id/announcements', authenticate, communityController.getAnnouncements);
 router.post('/:id/announcements', authenticate, communityController.createAnnouncement);
 
 export default router;

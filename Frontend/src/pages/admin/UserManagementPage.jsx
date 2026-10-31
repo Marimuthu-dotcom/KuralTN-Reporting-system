@@ -27,16 +27,22 @@ import {
 export function UserManagementPage() {
   const [users, setUsers] = useState([]);
   const [approvalRequests, setApprovalRequests] = useState([]);
+  const [wardRequests, setWardRequests] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
-  const [activeTab, setActiveTab] = useState('approvals'); // 'approvals' | 'users'
+  const [activeTab, setActiveTab] = useState('ward_requests'); // 'ward_requests' | 'approvals' | 'users'
 
   // Modal states for approving / rejecting registration requests
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [approvalModalOpen, setApprovalModalOpen] = useState(false);
   const [rejectionModalOpen, setRejectionModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Ward request reject modal
+  const [selectedWardRequest, setSelectedWardRequest] = useState(null);
+  const [wardRejectModalOpen, setWardRejectModalOpen] = useState(false);
+  const [wardRejectReason, setWardRejectReason] = useState('');
 
   // Form states for approval
   const [assignRole, setAssignRole] = useState('CITIZEN');
@@ -52,19 +58,51 @@ export function UserManagementPage() {
     setIsLoading(true);
     setLoadError(null);
     try {
-      const [usersData, reqData, deptsData] = await Promise.all([
+      const [usersData, reqData, wardReqData, deptsData] = await Promise.all([
         adminService.getUsers(),
         adminService.getApprovalRequests(),
+        adminService.getWardRequests().catch(() => []),
         departmentService.getDepartments().catch(() => []),
       ]);
       setUsers(usersData || []);
       setApprovalRequests(reqData || []);
+      setWardRequests(wardReqData || []);
       setDepartments(deptsData || []);
     } catch (err) {
       console.error('Failed to load user administration data:', err);
       setLoadError('Failed to load user accounts from database. Please check connection and retry.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleApproveWardRequest = async (reqId) => {
+    setActionLoading(true);
+    try {
+      await adminService.approveWardRequest(reqId);
+      await loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to approve ward request');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleRejectWardRequest = async (e) => {
+    e.preventDefault();
+    if (!selectedWardRequest) return;
+    setActionLoading(true);
+    try {
+      await adminService.rejectWardRequest(selectedWardRequest.id, {
+        reason: wardRejectReason.trim() || 'Address does not correspond with the chosen electoral ward boundaries.',
+      });
+      setWardRejectModalOpen(false);
+      setSelectedWardRequest(null);
+      await loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reject ward request');
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -208,18 +246,38 @@ export function UserManagementPage() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1 bg-[#FAF9F6] border border-[#E7E5E4] rounded-xl text-xs font-semibold self-start md:self-auto">
+        <div className="flex items-center gap-1.5 p-1 bg-[#FAF9F6] border border-[#E7E5E4] rounded-xl text-xs font-semibold self-start md:self-auto overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab('ward_requests')}
+            className={`px-3.5 py-1.5 rounded-lg flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'ward_requests'
+                ? 'bg-[#F97316] text-white shadow-xs font-bold'
+                : 'text-[#737373] hover:text-[#171717]'
+            }`}
+          >
+            <Building2 className="w-4 h-4" />
+            <span>Ward Membership Requests</span>
+            {wardRequests.filter((r) => r.status === 'Pending' || r.status === 'PENDING').length > 0 && (
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                activeTab === 'ward_requests' ? 'bg-white text-[#EA580C]' : 'bg-[#EA580C] text-white'
+              }`}>
+                {wardRequests.filter((r) => r.status === 'Pending' || r.status === 'PENDING').length}
+              </span>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={() => setActiveTab('approvals')}
-            className={`px-3.5 py-1.5 rounded-lg flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-lg flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'approvals'
                 ? 'bg-[#F97316] text-white shadow-xs font-bold'
                 : 'text-[#737373] hover:text-[#171717]'
             }`}
           >
             <FileCheck className="w-4 h-4" />
-            <span>Pending Approvals</span>
+            <span>Registration Approvals</span>
             {pendingApprovalsCount > 0 && (
               <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
                 activeTab === 'approvals' ? 'bg-white text-[#EA580C]' : 'bg-[#EA580C] text-white'
@@ -232,7 +290,7 @@ export function UserManagementPage() {
           <button
             type="button"
             onClick={() => setActiveTab('users')}
-            className={`px-3.5 py-1.5 rounded-lg flex items-center gap-2 transition-all cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-lg flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'users'
                 ? 'bg-[#F97316] text-white shadow-xs font-bold'
                 : 'text-[#737373] hover:text-[#171717]'
@@ -243,6 +301,137 @@ export function UserManagementPage() {
           </button>
         </div>
       </div>
+
+      {/* TAB: CITIZEN WARD MEMBERSHIP REQUESTS (Task 3) */}
+      {activeTab === 'ward_requests' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-[#171717] uppercase tracking-wider flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-[#F97316]" />
+              <span>Citizen Ward Community Membership Verification Queue</span>
+            </h2>
+            <span className="text-xs text-[#737373]">
+              {wardRequests.filter((r) => r.status === 'Pending' || r.status === 'PENDING').length} pending review
+            </span>
+          </div>
+
+          {wardRequests.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-[#E7E5E4] p-12 text-center text-xs text-[#737373] space-y-2">
+              <Building2 className="w-8 h-8 text-neutral-300 mx-auto mb-1" />
+              <div className="font-bold text-[#171717]">No ward membership requests submitted</div>
+              <div>When citizens request access to a local ward community, their residency claims will appear here for verification.</div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-[#E7E5E4] overflow-hidden shadow-xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-[#171717]">
+                  <thead className="bg-[#FAF9F6] border-b border-[#E7E5E4] text-[#737373] uppercase font-bold text-[10px]">
+                    <tr>
+                      <th className="p-4">Citizen</th>
+                      <th className="p-4">Requested Ward</th>
+                      <th className="p-4">District</th>
+                      <th className="p-4">Residential Address</th>
+                      <th className="p-4">Phone</th>
+                      <th className="p-4">Status</th>
+                      <th className="p-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E7E5E4]">
+                    {wardRequests.map((req) => {
+                      const isPending = req.status === 'Pending' || req.status === 'PENDING';
+                      const isApproved = req.status === 'Approved' || req.status === 'APPROVED';
+                      const isRejected = req.status === 'Rejected' || req.status === 'REJECTED';
+
+                      return (
+                        <tr key={req.id} className="hover:bg-neutral-50 transition-colors">
+                          <td className="p-4">
+                            <div className="font-bold text-[#171717]">{req.full_name}</div>
+                            <div className="text-[11px] text-[#737373]">{req.user_email || `User: ${req.user_id}`}</div>
+                          </td>
+
+                          <td className="p-4 font-bold text-orange-600">
+                            Ward {req.ward_number || req.ward_id}
+                          </td>
+
+                          <td className="p-4 font-medium text-neutral-800">
+                            {req.district || 'Tamil Nadu'}
+                          </td>
+
+                          <td className="p-4 text-[11px] text-[#171717] max-w-[220px]">
+                            {req.residential_address}
+                          </td>
+
+                          <td className="p-4 font-mono text-[11px] text-[#737373]">
+                            {req.phone || 'N/A'}
+                          </td>
+
+                          <td className="p-4">
+                            {isApproved ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                                <CheckCircle2 className="w-3 h-3" />
+                                Approved
+                              </span>
+                            ) : isRejected ? (
+                              <div>
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200">
+                                  <XCircle className="w-3 h-3" />
+                                  Rejected
+                                </span>
+                                {req.rejection_reason && (
+                                  <div className="text-[10px] text-red-600 mt-1 max-w-[150px] truncate" title={req.rejection_reason}>
+                                    {req.rejection_reason}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                <Clock className="w-3 h-3 animate-pulse" />
+                                Pending Verification
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="p-4 text-right">
+                            {isPending ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <Button
+                                  variant="primary"
+                                  size="xs"
+                                  className="bg-[#15803D] hover:bg-[#166534]"
+                                  isLoading={actionLoading}
+                                  onClick={() => handleApproveWardRequest(req.id)}
+                                >
+                                  Approve
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="xs"
+                                  className="text-red-600 hover:bg-red-50 border-red-200"
+                                  onClick={() => {
+                                    setSelectedWardRequest(req);
+                                    setWardRejectReason('');
+                                    setWardRejectModalOpen(true);
+                                  }}
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-[#737373]">
+                                Processed
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* TAB 1: PENDING ACCOUNT & ROLE APPROVALS */}
       {activeTab === 'approvals' && (
@@ -738,6 +927,67 @@ export function UserManagementPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setRejectionModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  className="bg-[#B91C1C] hover:bg-[#991B1B]"
+                  isLoading={actionLoading}
+                >
+                  Confirm Rejection
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: REJECT CITIZEN WARD MEMBERSHIP REQUEST */}
+      {wardRejectModalOpen && selectedWardRequest && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/60 backdrop-blur-xs">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#E7E5E4] space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E7E5E4]">
+              <div className="flex items-center gap-2">
+                <XCircle className="w-5 h-5 text-[#B91C1C]" />
+                <h3 className="font-bold text-sm text-[#171717]">Decline Ward Residency Request</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setWardRejectModalOpen(false)}
+                className="text-neutral-400 hover:text-neutral-700 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-[#737373]">
+              Decline Ward {selectedWardRequest.ward_number} membership request for <strong className="text-[#171717]">{selectedWardRequest.full_name}</strong>. The citizen will be notified with this reason and allowed to update their details and resubmit.
+            </p>
+
+            <form onSubmit={handleRejectWardRequest} className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-[#171717] text-[11px] mb-1">
+                  Reason for Rejection <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={wardRejectReason}
+                  onChange={(e) => setWardRejectReason(e.target.value)}
+                  placeholder="e.g. Address submitted falls outside Ward 114 jurisdiction. Please select your correct ward."
+                  className="w-full px-3 py-2 bg-white border border-[#E7E5E4] rounded-xl text-xs focus:ring-1 focus:ring-[#F97316]"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#E7E5E4]">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setWardRejectModalOpen(false)}
                 >
                   Cancel
                 </Button>

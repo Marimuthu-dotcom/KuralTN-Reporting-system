@@ -12,4 +12,8 @@ router.post('/onboard', userController.onboard);
 router.post('/send-phone-otp', userController.sendOtp);
 router.post('/verify-phone-otp', userController.verifyOtp);
 
+// Task 3: Citizen Ward Membership Request
+router.post('/me/ward-request', userController.submitWardRequest);
+router.get('/me/ward-status', userController.getWardStatus);
+
 export default router;

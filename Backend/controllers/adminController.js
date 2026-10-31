@@ -327,4 +327,313 @@ export const adminController = {
     const contact = officialDirectoryService.addContact(req.body);
     return successResponse(res, contact, 'Official contact saved', 201);
   }),
+
+  // ═══════════════════════════════════════════════════════════════
+  // Task 4: Invitation Management
+  // ═══════════════════════════════════════════════════════════════
+  getInvitations: asyncHandler(async (req, res) => {
+    const { userRepository } = await import('../repositories/userRepository.js');
+    const { search, role, status } = req.query;
+    const invitations = userRepository.findInvitations({ search, role, status });
+    return successResponse(res, invitations, 'Invitations retrieved successfully');
+  }),
+
+  createInvitation: asyncHandler(async (req, res) => {
+    const { userRepository } = await import('../repositories/userRepository.js');
+    const { wardRepository } = await import('../repositories/wardRepository.js');
+    const { generateSecureToken } = await import('../utils/tokenUtils.js');
+    const db = getDB();
+
+    const {
+      full_name,
+      email,
+      role,
+      assigned_district_id,
+      assigned_ward_id,
+      department_id,
+      designation,
+    } = req.body;
+
+    if (!full_name || !full_name.trim()) {
+      throw new AppError('Full name is required for invitation', 400);
+    }
+    if (!email || !email.trim()) {
+      throw new AppError('Professional email address is required', 400);
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      throw new AppError('Please provide a valid email format', 400);
+    }
+
+    if (!['WARD_COUNCILLOR', 'DEPARTMENT_HANDLER'].includes(role)) {
+      throw new AppError('Invitations are only valid for Ward Councillor or Department Staff roles.', 400);
+    }
+
+    let assigned_ward_name = null;
+    if (role === 'WARD_COUNCILLOR') {
+      if (!assigned_ward_id) {
+        throw new AppError('Assigned Ward is mandatory for Ward Councillor invitations.', 400);
+      }
+      const ward = wardRepository.findWardById(assigned_ward_id);
+      if (!ward) {
+        throw new AppError('Selected ward does not exist in registry.', 400);
+      }
+      assigned_ward_name = ward.ward_name;
+    }
+
+    let department_name = null;
+    if (role === 'DEPARTMENT_HANDLER') {
+      if (!department_id) {
+        throw new AppError('Municipal Department is mandatory for Department Staff invitations.', 400);
+      }
+      const dept = (db.departments || []).find((d) => d.id === department_id);
+      department_name = dept ? dept.name : department_id;
+    }
+
+    // Check duplicate active invitation
+    const existingActive = userRepository.findInvitationByEmail(cleanEmail);
+    if (existingActive) {
+      throw new AppError('An active pending invitation already exists for this email address. You can resend or revoke it.', 409);
+    }
+
+    const token = generateSecureToken(32);
+    const newInvitation = userRepository.createInvitation({
+      token,
+      full_name: full_name.trim(),
+      email: cleanEmail,
+      role,
+      assigned_district_id,
+      assigned_ward_id,
+      assigned_ward_name,
+      department_id,
+      department_name,
+      designation: designation?.trim() || (role === 'WARD_COUNCILLOR' ? 'Elected Ward Councillor' : 'Municipal Department Officer'),
+      created_by_user_id: req.user.id,
+      created_by_name: req.user.full_name || 'System Administrator',
+    });
+
+    // Create persistent system audit log
+    auditService.logAction({
+      user_id: req.user.id,
+      action: 'CREATE_OFFICIAL_INVITATION',
+      resource_type: 'INVITATION',
+      resource_id: newInvitation.id,
+      metadata: { email: cleanEmail, role, assigned_ward_id, department_id },
+    });
+
+    return successResponse(res, newInvitation, 'Official invitation created and dispatched successfully', 201);
+  }),
+
+  resendInvitation: asyncHandler(async (req, res) => {
+    const { userRepository } = await import('../repositories/userRepository.js');
+    const { id } = req.params;
+    const inv = userRepository.findInvitationById(id);
+    if (!inv) throw new AppError('Invitation record not found', 404);
+
+    if (inv.status === 'Accepted') {
+      throw new AppError('This invitation has already been accepted and activated.', 400);
+    }
+
+    const newExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const updated = userRepository.updateInvitation(id, {
+      status: 'Pending',
+      expires_at: newExpiry,
+    });
+
+    auditService.logAction({
+      user_id: req.user.id,
+      action: 'RESEND_OFFICIAL_INVITATION',
+      resource_type: 'INVITATION',
+      resource_id: id,
+      metadata: { email: inv.email, role: inv.role },
+    });
+
+    return successResponse(res, updated, 'Invitation validity renewed and resent successfully');
+  }),
+
+  revokeInvitation: asyncHandler(async (req, res) => {
+    const { userRepository } = await import('../repositories/userRepository.js');
+    const { id } = req.params;
+    const inv = userRepository.findInvitationById(id);
+    if (!inv) throw new AppError('Invitation record not found', 404);
+
+    if (inv.status === 'Accepted') {
+      throw new AppError('Cannot revoke an invitation that has already been accepted.', 400);
+    }
+
+    const updated = userRepository.updateInvitation(id, {
+      status: 'Revoked',
+    });
+
+    auditService.logAction({
+      user_id: req.user.id,
+      action: 'REVOKE_OFFICIAL_INVITATION',
+      resource_type: 'INVITATION',
+      resource_id: id,
+      metadata: { email: inv.email, role: inv.role },
+    });
+
+    return successResponse(res, updated, 'Invitation revoked successfully');
+  }),
+
+  // ═══════════════════════════════════════════════════════════════
+  // Task 3: Citizen Ward Membership Requests
+  // ═══════════════════════════════════════════════════════════════
+  getWardRequests: asyncHandler(async (req, res) => {
+    const { userRepository } = await import('../repositories/userRepository.js');
+    const { status } = req.query;
+    const requests = userRepository.findWardMembershipRequests({ status });
+    return successResponse(res, requests, 'Citizen ward membership requests retrieved');
+  }),
+
+  approveWardRequest: asyncHandler(async (req, res) => {
+    const { userRepository } = await import('../repositories/userRepository.js');
+    const { id } = req.params;
+    const reqRecord = userRepository.findWardMembershipRequestById(id);
+    if (!reqRecord) throw new AppError('Ward membership request not found', 404);
+
+    if (reqRecord.status === 'Approved') {
+      throw new AppError('This request is already approved.', 400);
+    }
+
+    const now = new Date().toISOString();
+    const db = getDB();
+
+    // 1. Update request status
+    const updatedReq = userRepository.updateWardMembershipRequest(id, {
+      status: 'Approved',
+      reviewed_by_user_id: req.user.id,
+      reviewed_by_name: req.user.full_name || 'System Administrator',
+      reviewed_at: now,
+    });
+
+    // 2. Update user profile
+    const user = db.users.find((u) => u.id === reqRecord.user_id);
+    if (user) {
+      user.ward_id = reqRecord.ward_id;
+      user.verified_ward_id = reqRecord.ward_id;
+      user.claimed_ward_id = reqRecord.ward_id;
+      user.is_ward_verified = true;
+      user.ward_verification_status = 'VERIFIED';
+      user.ward_verified_at = now;
+      user.ward_verified_by_user_id = req.user.id;
+      user.updated_at = now;
+
+      // Update user details
+      const details = db.user_details.find((d) => d.user_id === user.id);
+      if (details) {
+        details.is_ward_verified = true;
+        details.ward_verification_status = 'VERIFIED';
+        details.verified_ward_id = reqRecord.ward_id;
+        details.ward_verified_at = now;
+        details.ward_verified_by_user_id = req.user.id;
+        details.address_line = reqRecord.residential_address || details.address_line;
+      }
+
+      // Add to ward members
+      db.ward_members = db.ward_members || [];
+      const memberExists = db.ward_members.find(
+        (wm) => wm.ward_id === reqRecord.ward_id && wm.user_id === user.id
+      );
+      if (!memberExists) {
+        db.ward_members.push({
+          id: `wm-${Date.now()}`,
+          ward_id: reqRecord.ward_id,
+          user_id: user.id,
+          is_verified: true,
+          joined_at: now,
+        });
+      }
+
+      // Create notification for Citizen
+      db.notifications = db.notifications || [];
+      db.notifications.push({
+        id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        user_id: user.id,
+        title: 'Ward Community Membership Approved! 🎉',
+        message: `Your residential verification for ${reqRecord.ward_name || `Ward ${reqRecord.ward_number}`} has been officially approved. You now have full access to your ward community discussions, announcements, and polls.`,
+        type: 'WARD_MEMBERSHIP_APPROVED',
+        related_entity_type: 'WARD_MEMBERSHIP',
+        related_entity_id: reqRecord.ward_id,
+        is_read: false,
+        created_at: now,
+      });
+
+      persistDB();
+    }
+
+    auditService.logAction({
+      user_id: req.user.id,
+      action: 'APPROVE_WARD_MEMBERSHIP',
+      resource_type: 'WARD_REQUEST',
+      resource_id: id,
+      metadata: { user_id: reqRecord.user_id, ward_id: reqRecord.ward_id },
+    });
+
+    return successResponse(res, updatedReq, 'Citizen ward community membership approved successfully');
+  }),
+
+  rejectWardRequest: asyncHandler(async (req, res) => {
+    const { userRepository } = await import('../repositories/userRepository.js');
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (!reason || !reason.trim()) {
+      throw new AppError('A valid rejection reason is mandatory when declining ward membership.', 400);
+    }
+
+    const reqRecord = userRepository.findWardMembershipRequestById(id);
+    if (!reqRecord) throw new AppError('Ward membership request not found', 404);
+
+    const now = new Date().toISOString();
+    const db = getDB();
+
+    const updatedReq = userRepository.updateWardMembershipRequest(id, {
+      status: 'Rejected',
+      rejection_reason: reason.trim(),
+      reviewed_by_user_id: req.user.id,
+      reviewed_by_name: req.user.full_name || 'System Administrator',
+      reviewed_at: now,
+    });
+
+    const user = db.users.find((u) => u.id === reqRecord.user_id);
+    if (user) {
+      user.is_ward_verified = false;
+      user.ward_verification_status = 'REJECTED';
+      user.updated_at = now;
+
+      const details = db.user_details.find((d) => d.user_id === user.id);
+      if (details) {
+        details.is_ward_verified = false;
+        details.ward_verification_status = 'REJECTED';
+      }
+
+      db.notifications = db.notifications || [];
+      db.notifications.push({
+        id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        user_id: user.id,
+        title: 'Ward Membership Request Rejected',
+        message: `Your request to join ${reqRecord.ward_name || 'ward'} community was not approved: "${reason.trim()}". You may correct your address information and resubmit.`,
+        type: 'WARD_MEMBERSHIP_REJECTED',
+        related_entity_type: 'WARD_MEMBERSHIP',
+        related_entity_id: reqRecord.ward_id,
+        is_read: false,
+        created_at: now,
+      });
+
+      persistDB();
+    }
+
+    auditService.logAction({
+      user_id: req.user.id,
+      action: 'REJECT_WARD_MEMBERSHIP',
+      resource_type: 'WARD_REQUEST',
+      resource_id: id,
+      metadata: { user_id: reqRecord.user_id, reason },
+    });
+
+    return successResponse(res, updatedReq, 'Citizen ward membership request rejected');
+  }),
 };
+

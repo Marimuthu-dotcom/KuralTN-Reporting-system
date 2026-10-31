@@ -183,4 +183,103 @@ export const userService = {
 
     return updated;
   },
+
+  async submitWardMembershipRequest(userId, { full_name, phone, residential_address, district_id, ward_id }) {
+    if (!full_name || full_name.trim().length < 2) {
+      throw new AppError('Full name is required', 400);
+    }
+    if (!residential_address || residential_address.trim().length < 5) {
+      throw new AppError('Detailed residential address is required (at least 5 characters)', 400);
+    }
+    if (!district_id) {
+      throw new AppError('District is required', 400);
+    }
+    if (!ward_id) {
+      throw new AppError('Residential Ward is required', 400);
+    }
+
+    const ward = wardRepository.findWardById(ward_id);
+    if (!ward) {
+      throw new AppError('Selected ward not found in municipal registry', 400);
+    }
+
+    const user = userRepository.findById(userId);
+    if (!user) throw new AppError('User not found', 404);
+
+    const { getDB, persistDB } = await import('../config/db.js');
+    const db = getDB();
+    const district = (db.districts || []).find((d) => d.id === district_id);
+
+    // Create the request
+    const reqRecord = userRepository.createWardMembershipRequest({
+      user_id: userId,
+      full_name: full_name.trim(),
+      email: user.email,
+      phone: phone ? phone.trim() : user.phone,
+      residential_address: residential_address.trim(),
+      district_id,
+      district_name: district ? district.name : district_id,
+      ward_id,
+      ward_name: ward.ward_name,
+      ward_number: ward.ward_number,
+    });
+
+    // Update user profile status
+    const updatedUser = userRepository.update(userId, {
+      full_name: full_name.trim(),
+      phone: phone ? phone.trim() : user.phone,
+      ward_id: ward_id,
+      claimed_ward_id: ward_id,
+      address_line: residential_address.trim(),
+      ward_verification_status: 'PENDING',
+      is_ward_verified: false,
+    });
+
+    // Notify administrators
+    const adminUsers = (db.users || []).filter((u) => u.role === 'ADMIN');
+    adminUsers.forEach((admin) => {
+      db.notifications = db.notifications || [];
+      db.notifications.push({
+        id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        user_id: admin.id,
+        title: 'New Citizen Ward Membership Request',
+        message: `${full_name.trim()} (${user.email}) requested verification to join ${ward.ward_name}.`,
+        type: 'WARD_MEMBERSHIP_REQUEST',
+        related_entity_type: 'WARD_REQUEST',
+        related_entity_id: reqRecord.id,
+        is_read: false,
+        created_at: new Date().toISOString(),
+      });
+    });
+    persistDB();
+
+    return { request: reqRecord, user: updatedUser };
+  },
+
+  async getWardMembershipStatus(userId) {
+    const user = userRepository.findById(userId);
+    if (!user) throw new AppError('User not found', 404);
+
+    const latestRequest = userRepository.findLatestWardMembershipRequestByUserId(userId);
+    const ward = user.ward_id ? wardRepository.findWardById(user.ward_id) : null;
+
+    let status = 'NOT_SUBMITTED';
+    if (user.is_ward_verified && user.ward_verification_status === 'VERIFIED') {
+      status = 'APPROVED';
+    } else if (user.ward_verification_status === 'PENDING') {
+      status = 'PENDING';
+    } else if (user.ward_verification_status === 'REJECTED') {
+      status = 'REJECTED';
+    } else if (latestRequest) {
+      status = latestRequest.status?.toUpperCase() || 'NOT_SUBMITTED';
+    }
+
+    return {
+      status, // 'NOT_SUBMITTED' | 'PENDING' | 'APPROVED' | 'REJECTED'
+      is_ward_verified: Boolean(user.is_ward_verified),
+      ward_id: user.ward_id,
+      ward,
+      request: latestRequest,
+    };
+  },
 };

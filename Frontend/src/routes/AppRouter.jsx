@@ -26,6 +26,8 @@ import { HelpPage } from '../pages/public/HelpPage';
 import { NotFoundPage } from '../pages/public/NotFoundPage';
 
 import { LoginPage } from '../pages/auth/LoginPage';
+import { RegisterPage } from '../pages/auth/RegisterPage';
+import { AcceptInvitationPage } from '../pages/auth/AcceptInvitationPage';
 import { AuthCallbackPage } from '../pages/auth/AuthCallbackPage';
 import { OnboardingPage } from '../pages/auth/OnboardingPage';
 import { VerificationPendingPage } from '../pages/auth/VerificationPendingPage';
@@ -66,6 +68,7 @@ import { AccountabilityCaseDetailPage } from '../pages/reviewer/AccountabilityCa
 // Admin Pages
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
 import { UserManagementPage } from '../pages/admin/UserManagementPage';
+import { InvitationManagementPage } from '../pages/admin/InvitationManagementPage';
 import { DistrictManagementPage } from '../pages/admin/DistrictManagementPage';
 import { CategoryManagementPage } from '../pages/admin/CategoryManagementPage';
 import { DeadlineRulesPage } from '../pages/admin/DeadlineRulesPage';
@@ -90,6 +93,9 @@ export function AppRouter() {
       {/* Auth Pages */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/invitation/accept" element={<AcceptInvitationPage />} />
+        <Route path="/invitations/accept" element={<AcceptInvitationPage />} />
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/verification-pending" element={<VerificationPendingPage />} />
@@ -161,6 +167,7 @@ export function AppRouter() {
         }
       >
         <Route path="/admin" element={<AdminDashboardPage />} />
+        <Route path="/admin/invitations" element={<InvitationManagementPage />} />
         <Route path="/admin/users" element={<UserManagementPage />} />
         <Route path="/admin/districts" element={<DistrictManagementPage />} />
         <Route path="/admin/categories" element={<CategoryManagementPage />} />

@@ -15,7 +15,7 @@ export const communityController = {
   }),
 
   getAnnouncements: asyncHandler(async (req, res) => {
-    const announcements = await communityService.getWardAnnouncements(req.params.id);
+    const announcements = await communityService.getWardAnnouncements(req.user, req.params.id);
     return successResponse(res, announcements, 'Ward announcements retrieved');
   }),
 

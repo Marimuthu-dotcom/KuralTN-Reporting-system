@@ -5,11 +5,61 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { JWT_CONFIG } from '../config/jwt.js';
 
 export const authController = {
+  register: asyncHandler(async (req, res) => {
+    const { full_name, email, username, password, confirm_password } = req.body;
+    const { user, accessToken, refreshToken, authStatus, redirectTo } = await authService.registerCitizen({
+      full_name,
+      email,
+      username,
+      password,
+      confirm_password,
+    });
+
+    res.cookie(JWT_CONFIG.cookieName, refreshToken, JWT_CONFIG.cookieOptions);
+
+    return successResponse(
+      res,
+      {
+        user,
+        accessToken,
+        refreshToken,
+        authStatus,
+        redirectTo,
+      },
+      'Citizen registered successfully',
+      201
+    );
+  }),
+
+  login: asyncHandler(async (req, res) => {
+    const { identifier, password } = req.body;
+    const { user, accessToken, refreshToken, authStatus, redirectTo } = await authService.loginUser({
+      identifier,
+      password,
+    });
+
+    res.cookie(JWT_CONFIG.cookieName, refreshToken, JWT_CONFIG.cookieOptions);
+
+    return successResponse(
+      res,
+      {
+        user,
+        accessToken,
+        refreshToken,
+        authStatus,
+        redirectTo,
+      },
+      'Signed in successfully'
+    );
+  }),
+
   loginWithGoogle: asyncHandler(async (req, res) => {
-    const { credential, demo_user_id } = req.body;
+    const { credential, demo_user_id, mode, invitation_token } = req.body;
     const { user, accessToken, refreshToken, authStatus, redirectTo } = await authService.authenticateGoogle(
       credential,
-      demo_user_id
+      demo_user_id,
+      mode,
+      invitation_token
     );
 
     // Set refresh token in HTTP-only cookie
@@ -25,6 +75,52 @@ export const authController = {
         redirectTo,
       },
       'Authentication successful'
+    );
+  }),
+
+  getInvitation: asyncHandler(async (req, res) => {
+    const { token } = req.params;
+    const invitation = await authService.validateInvitation(token);
+    return successResponse(
+      res,
+      {
+        id: invitation.id,
+        full_name: invitation.full_name,
+        email: invitation.email,
+        role: invitation.role,
+        assigned_district_id: invitation.assigned_district_id,
+        assigned_ward_id: invitation.assigned_ward_id,
+        assigned_ward_name: invitation.assigned_ward_name,
+        department_id: invitation.department_id,
+        department_name: invitation.department_name,
+        designation: invitation.designation,
+        status: invitation.status,
+        expires_at: invitation.expires_at,
+      },
+      'Invitation verified'
+    );
+  }),
+
+  acceptInvitation: asyncHandler(async (req, res) => {
+    const { token, password, full_name, username } = req.body;
+    const { user, accessToken, refreshToken, redirectTo } = await authService.acceptInvitation({
+      token,
+      password,
+      full_name,
+      username,
+    });
+
+    res.cookie(JWT_CONFIG.cookieName, refreshToken, JWT_CONFIG.cookieOptions);
+
+    return successResponse(
+      res,
+      {
+        user,
+        accessToken,
+        refreshToken,
+        redirectTo,
+      },
+      'Invitation accepted and account activated successfully'
     );
   }),
 

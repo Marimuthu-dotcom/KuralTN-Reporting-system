@@ -67,4 +67,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Centralized error handling
+app.use(notFound);
+app.use(errorHandler);
+
 export default app;

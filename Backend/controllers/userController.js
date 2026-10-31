@@ -28,4 +28,14 @@ export const userController = {
     const result = await userService.verifyPhoneOtp(req.user.id, req.body);
     return successResponse(res, result, result.message);
   }),
+
+  submitWardRequest: asyncHandler(async (req, res) => {
+    const result = await userService.submitWardMembershipRequest(req.user.id, req.body);
+    return successResponse(res, result, 'Ward community membership request submitted for administrative verification', 201);
+  }),
+
+  getWardStatus: asyncHandler(async (req, res) => {
+    const status = await userService.getWardMembershipStatus(req.user.id);
+    return successResponse(res, status, 'Ward membership status retrieved');
+  }),
 };

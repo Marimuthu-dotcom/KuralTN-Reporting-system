@@ -1,13 +1,34 @@
 // Backend/repositories/userRepository.js
 import { getDB, persistDB } from '../config/db.js';
 
+function formatUser(user, details = {}) {
+  if (!user) return null;
+  const merged = { ...user, ...details };
+  // If user is an approved citizen with a ward, mark them verified for their ward
+  if (merged.approval_status === 'APPROVED' && merged.ward_id) {
+    if (merged.is_ward_verified !== false) {
+      merged.is_ward_verified = true;
+      if (!merged.ward_verification_status || merged.ward_verification_status === 'UNREGISTERED' || merged.ward_verification_status === 'PENDING') {
+        merged.ward_verification_status = 'VERIFIED';
+      }
+    }
+  }
+  if (merged.is_ward_verified) {
+    merged.ward_verification_status = 'VERIFIED';
+  }
+  if (merged.ward_verification_status === 'VERIFIED') {
+    merged.is_ward_verified = true;
+  }
+  return merged;
+}
+
 export const userRepository = {
   findById(id) {
     const db = getDB();
     const user = db.users.find((u) => u.id === id);
     if (!user) return null;
     const details = db.user_details.find((d) => d.user_id === id) || {};
-    return { ...user, ...details };
+    return formatUser(user, details);
   },
 
   findByEmail(email) {
@@ -15,7 +36,7 @@ export const userRepository = {
     const user = db.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
     if (!user) return null;
     const details = db.user_details.find((d) => d.user_id === user.id) || {};
-    return { ...user, ...details };
+    return formatUser(user, details);
   },
 
   findByGoogleId(googleId) {
@@ -23,7 +44,7 @@ export const userRepository = {
     const user = db.users.find((u) => u.google_id === googleId);
     if (!user) return null;
     const details = db.user_details.find((d) => d.user_id === user.id) || {};
-    return { ...user, ...details };
+    return formatUser(user, details);
   },
 
   create(userData, detailsData = {}) {
@@ -126,7 +147,7 @@ export const userRepository = {
     const db = getDB();
     return db.users.map((u) => {
       const details = db.user_details.find((d) => d.user_id === u.id) || {};
-      return { ...u, ...details };
+      return formatUser(u, details);
     });
   },
 

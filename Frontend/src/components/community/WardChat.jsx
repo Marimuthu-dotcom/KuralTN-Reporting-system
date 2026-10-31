@@ -15,9 +15,17 @@ export function WardChat({ wardId, wardName }) {
   const { t, isTamil } = useLanguage();
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [restrictionReason, setRestrictionReason] = useState(null);
 
   // Ward restriction
-  const isEligible = user && (user.role === 'ADMIN' || user.ward_id === wardId);
+  const isEligible = Boolean(
+    user && (
+      user.role === 'ADMIN' ||
+      user.role === 'WARD_COUNCILLOR' ||
+      user.role === 'ACCOUNTABILITY_REVIEWER' ||
+      (user.ward_id === wardId || user.verified_ward_id === wardId)
+    )
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -28,9 +36,23 @@ export function WardChat({ wardId, wardName }) {
       }
       try {
         const data = await communityService.getMessages(wardId);
-        if (isMounted) setMessages(data || []);
+        if (isMounted) {
+          setMessages(data || []);
+          setRestrictionReason(null);
+        }
       } catch (err) {
-        console.error('Failed to load ward messages:', err);
+        if (err.response?.status === 403) {
+          if (isMounted) {
+            setRestrictionReason(
+              err.response?.data?.message ||
+              (isTamil
+                ? 'உங்கள் குடியிருப்பு சரிபார்க்கப்படும் வரை வார்டு உரையாடல் கட்டுப்படுத்தப்பட்டுள்ளது.'
+                : 'Private ward community messages are restricted to verified residents whose address has been approved.')
+            );
+          }
+        } else {
+          console.warn('Could not load ward messages:', err?.message);
+        }
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -59,7 +81,7 @@ export function WardChat({ wardId, wardName }) {
     return () => {
       isMounted = false;
     };
-  }, [wardId, isEligible, socket]);
+  }, [wardId, isEligible, socket, isTamil]);
 
   const handleSendMessage = async (payload) => {
     try {
@@ -70,7 +92,7 @@ export function WardChat({ wardId, wardName }) {
     }
   };
 
-  if (!isEligible) {
+  if (!isEligible || restrictionReason) {
     return (
       <div className="bg-white rounded-2xl border border-[#E7E5E4] p-8 text-center space-y-3">
         <div className="p-3 bg-neutral-100 rounded-full w-fit mx-auto text-[#737373]">
@@ -80,9 +102,9 @@ export function WardChat({ wardId, wardName }) {
           {isTamil ? 'வார்டு உரையாடல் கட்டுப்பாடு' : 'Ward Community Restricted'}
         </h3>
         <p className="text-xs text-[#737373] max-w-md mx-auto leading-relaxed">
-          {isTamil
-            ? `இந்த அரங்கம் ${wardName} பகுதிக்குரியது. பொதுப் புகார்களைப் பார்க்கலாம்; ஆனால் நேரலை உரையாடலில் பங்கேற்க அந்த வார்டில் பதிவுசெய்த உறுப்பினர்களுக்கே அனுமதியுண்டு.`
-            : `This community chat belongs to ${wardName}. You can view public complaints from this ward, but live chat interactions are restricted to verified ward members.`}
+          {restrictionReason || (isTamil
+            ? `இந்த அரங்கம் ${wardName || 'இந்த வார்டு'} பகுதிக்குரியது. பொதுப் புகார்களைப் பார்க்கலாம்; ஆனால் நேரலை உரையாடலில் பங்கேற்க அந்த வார்டில் பதிவுசெய்த உறுப்பினர்களுக்கே அனுமதியுண்டு.`
+            : `This community chat belongs to ${wardName || 'this ward'}. You can view public complaints from this ward, but live chat interactions are restricted to verified ward members.`)}
         </p>
       </div>
     );

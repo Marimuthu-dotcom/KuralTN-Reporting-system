@@ -77,4 +77,39 @@ export const adminService = {
     const res = await api.post('/admin/official-contacts', data);
     return res.data.data;
   },
+
+  async getInvitations() {
+    const res = await api.get('/admin/invitations');
+    return res.data.data;
+  },
+
+  async createInvitation(data) {
+    const res = await api.post('/admin/invitations', data);
+    return res.data.data;
+  },
+
+  async resendInvitation(id) {
+    const res = await api.post(`/admin/invitations/${id}/resend`);
+    return res.data.data;
+  },
+
+  async revokeInvitation(id) {
+    const res = await api.post(`/admin/invitations/${id}/revoke`);
+    return res.data.data;
+  },
+
+  async getWardRequests() {
+    const res = await api.get('/admin/ward-requests');
+    return res.data.data;
+  },
+
+  async approveWardRequest(id, data = {}) {
+    const res = await api.post(`/admin/ward-requests/${id}/approve`, data);
+    return res.data.data;
+  },
+
+  async rejectWardRequest(id, { reason }) {
+    const res = await api.post(`/admin/ward-requests/${id}/reject`, { reason });
+    return res.data.data;
+  },
 };

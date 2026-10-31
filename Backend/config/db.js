@@ -607,17 +607,22 @@ function stopHealthCheck() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Reconnect loop (every 30s while DISCONNECTED)
+// Reconnect loop (every 30s while DISCONNECTED, max 3 attempts)
 // ═══════════════════════════════════════════════════════════════
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 3;
+
 function startReconnectLoop() {
   if (reconnectTimer) 
     return;
 
+  reconnectAttempts = 0;
   dbState = DB_STATE.RECONNECTING;
-  console.log(`🔁 Reconnecting to MySQL every ${RECONNECT_INTERVAL_MS / 1000}s...`);
+  console.log(`🔁 Background MySQL check initialized (max ${MAX_RECONNECT_ATTEMPTS} attempts)...`);
 
   const attempt = async () => 
   {
+    reconnectAttempts++;
     // Fresh pool — old connections are dead after a crash
     if (pool) 
     {
@@ -640,12 +645,18 @@ function startReconnectLoop() {
     } 
     else 
     {
-      console.warn('❌ Reconnect attempt failed — will retry in 30s');
+      if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+        console.log(`ℹ️ MySQL connection retry limit reached (${MAX_RECONNECT_ATTEMPTS}). Remaining in resilient JSON store mode.`);
+        stopReconnectLoop();
+        dbState = DB_STATE.DISCONNECTED;
+      }
     }
   };
 
   attempt();
-  reconnectTimer = setInterval(attempt, RECONNECT_INTERVAL_MS);
+  if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+    reconnectTimer = setInterval(attempt, RECONNECT_INTERVAL_MS);
+  }
 }
 
 function stopReconnectLoop() {
@@ -733,9 +744,10 @@ export async function initDB() {
   else 
   {
     dbState = DB_STATE.DISCONNECTED;
-    console.warn('⚠️  MySQL unavailable — JSON fallback active');
-    console.warn('🔁 Will retry connection every 30s in background');
-    startReconnectLoop();
+    console.log('ℹ️  MySQL offline or not configured — JSON store active');
+    if (process.env.DB_HOST && process.env.DB_HOST !== 'localhost') {
+      startReconnectLoop();
+    }
   }
 
   loadJSONStore();
