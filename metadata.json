@@ -1,0 +1,8 @@
+{
+  "name": "KuralTN",
+  "description": "KuralTN — AI-Powered Civic Grievance Reporting and Community Issue Resolution System for Tamil Nadu, India. Enables citizens to report civic issues, track evidence-based resolution deadlines, join verified ward communities, and ensure accountability.",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

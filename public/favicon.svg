@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="kuralBgGrad" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F97316" />
+      <stop offset="70%" stop-color="#EA580C" />
+      <stop offset="100%" stop-color="#C2410C" />
+    </linearGradient>
+    <linearGradient id="kuralVoiceAccent" x1="8" y1="8" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FDE047" />
+      <stop offset="100%" stop-color="#F59E0B" />
+    </linearGradient>
+  </defs>
+  <path d="M24 4C14.0589 4 6 12.0589 6 22C6 26.6853 7.8284 30.9575 10.8284 34.1716L9 41.5L16.3284 39.6716C18.6215 40.5284 21.2284 41 24 41C33.9411 41 42 32.9411 42 23C42 12.5442 33.9411 4 24 4Z" fill="url(#kuralBgGrad)" />
+  <path d="M10 21C10 13.268 16.268 7 24 7" stroke="url(#kuralVoiceAccent)" stroke-width="2.5" stroke-linecap="round" stroke-opacity="0.85" />
+  <circle cx="34" cy="12" r="2.5" fill="#FDE047" />
+  <path d="M16 22.5L21.5 28L32 16.5" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

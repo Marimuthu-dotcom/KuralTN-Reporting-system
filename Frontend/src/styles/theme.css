@@ -1,0 +1,24 @@
+/* Frontend/src/styles/theme.css */
+:root {
+  --font-sans: 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  
+  /* Primary Brand Palette */
+  --color-primary-orange: #F97316;
+  --color-deep-orange: #EA580C;
+  --color-charcoal-black: #171717;
+  --color-pure-white: #FFFFFF;
+  --color-warm-bg: #FAF9F6;
+  --color-light-border: #E7E5E4;
+  --color-muted-text: #737373;
+  
+  /* Semantic Status Feedback */
+  --color-success-green: #15803D;
+  --color-warning-amber: #B45309;
+  --color-error-red: #B91C1C;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-warm-bg);
+  color: var(--color-charcoal-black);
+}

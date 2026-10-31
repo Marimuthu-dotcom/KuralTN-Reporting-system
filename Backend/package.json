@@ -1,0 +1,29 @@
+{
+  "name": "kuraltn-backend",
+  "version": "1.0.0",
+  "description": "Backend API server for KuralTN — Tamil Nadu Civic Grievance & Ward Issue Resolution System",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.4.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0",
+    "mysql2": "^3.24.5",
+    "socket.io": "^4.8.4"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.14.0",
+    "tsx": "^4.21.0"
+  }
+}
