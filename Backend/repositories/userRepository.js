@@ -5,7 +5,8 @@ function formatUser(user, details = {}) {
   if (!user) return null;
   const merged = { ...user, ...details };
   // If user is an approved citizen with a ward, mark them verified for their ward
-  if (merged.approval_status === 'APPROVED' && merged.ward_id) {
+  if (merged.approval_status === 'APPROVED' && merged.ward_id) 
+  {
     if (merged.is_ward_verified !== false) {
       merged.is_ward_verified = true;
       if (!merged.ward_verification_status || merged.ward_verification_status === 'UNREGISTERED' || merged.ward_verification_status === 'PENDING') {
@@ -23,10 +24,12 @@ function formatUser(user, details = {}) {
 }
 
 export const userRepository = {
-  findById(id) {
+  findById(id) 
+  {
     const db = getDB();
     const user = db.users.find((u) => u.id === id);
-    if (!user) return null;
+    if (!user) 
+      return null;
     const details = db.user_details.find((d) => d.user_id === id) || {};
     return formatUser(user, details);
   },

@@ -2,7 +2,8 @@
 import api, { setAccessToken } from './api.js';
 
 export const authService = {
-  async register({ full_name, email, username, password, confirm_password }) {
+  async register({ full_name, email, username, password, confirm_password }) 
+  {
     const res = await api.post('/auth/register', {
       full_name,
       email,
@@ -17,7 +18,8 @@ export const authService = {
     return { user, accessToken, refreshToken, authStatus, redirectTo };
   },
 
-  async login({ identifier, password }) {
+  async login({ identifier, password }) 
+  {
     const res = await api.post('/auth/login', {
       identifier,
       password,
@@ -38,8 +40,10 @@ export const authService = {
     });
     const { user, accessToken, refreshToken, authStatus, redirectTo } = res.data.data;
     setAccessToken(accessToken);
-    if (user) localStorage.setItem('civic_user', JSON.stringify(user));
-    if (refreshToken) localStorage.setItem('civic_refresh_token', refreshToken);
+    if (user) 
+      localStorage.setItem('civic_user', JSON.stringify(user));
+    if (refreshToken) 
+      localStorage.setItem('civic_refresh_token', refreshToken);
     return { user, accessToken, refreshToken, authStatus, redirectTo };
   },
 

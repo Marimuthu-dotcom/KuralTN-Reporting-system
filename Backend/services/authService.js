@@ -6,20 +6,25 @@ import { getDB, persistDB } from '../config/db.js';
 import { AppError } from '../utils/AppError.js';
 
 export const authService = {
-  async authenticateGoogle(credential, demoUserId = null) {
+  async authenticateGoogle(credential, demoUserId = null) 
+  {
     let user = null;
     let authStatus = 'AUTHENTICATED';
     let redirectTo = '/dashboard';
 
-    if (demoUserId) {
+    if (demoUserId) 
+    {
       user = userRepository.findById(demoUserId);
-      if (!user) {
+      if (!user) 
+      {
         throw new AppError('Specified demo user account not found', 404);
       }
-      if (!user.is_active || user.approval_status === 'SUSPENDED') {
+      if (!user.is_active || user.approval_status === 'SUSPENDED') 
+      {
         throw new AppError('This user account has been suspended or restricted by municipal administration.', 403);
       }
-      if (user.approval_status === 'REJECTED') {
+      if (user.approval_status === 'REJECTED') 
+      {
         throw new AppError('This account registration was declined by the system administrator.', 403);
       }
 

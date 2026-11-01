@@ -1,22 +1,18 @@
 // Frontend/src/pages/auth/LoginPage.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../hooks/useLanguage';
-import { LanguageToggle } from '../../components/common/LanguageToggle';
-import { DEMO_ACCOUNTS } from '../../utils/constants';
 import { Button } from '../../components/common/Button';
 import {
-  User,
-  Mail,
   Lock,
   ArrowRight,
   Shield,
   AlertCircle,
-  ChevronDown,
-  ChevronUp,
-  X,
   AtSign,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export function LoginPage() {
@@ -29,8 +25,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showAccountChooser, setShowAccountChooser] = useState(false);
-  const [showDevPersonas, setShowDevPersonas] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Preserve intended destination
   const from = location.state?.from
@@ -80,28 +75,18 @@ export function LoginPage() {
     }
   };
 
-  const executeGoogleAuth = async (googleAccountPayload) => {
+  // Real Google OAuth: receives a genuine Google ID token (JWT)
+  const handleGoogleSuccess = async (credentialResponse) => {
+    if (!credentialResponse?.credential) {
+      setError(isTamil ? 'கூகிள் சான்று கிடைக்கவில்லை' : 'Google credential was not received. Please try again.');
+      return;
+    }
+
     setIsLoading(true);
     setError('');
-    setShowAccountChooser(false);
     try {
-      const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-      const payload = btoa(
-        JSON.stringify({
-          sub: googleAccountPayload.sub,
-          email: googleAccountPayload.email,
-          name: googleAccountPayload.name,
-          picture: googleAccountPayload.picture || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-          email_verified: true,
-          iss: 'https://accounts.google.com',
-          aud: 'tn-civic-applet',
-        })
-      );
-      const signature = btoa('mock_secure_google_signature');
-      const credential = `${header}.${payload}.${signature}`;
-
       // Mode is 'login' - rejects silent creation if unregistered
-      const res = await loginWithGoogle(credential, null, 'login');
+      const res = await loginWithGoogle(credentialResponse.credential, null, 'login');
       handlePostLoginRedirect(res);
     } catch (err) {
       setError(
@@ -116,26 +101,12 @@ export function LoginPage() {
     }
   };
 
-  const handleTestPersonaLogin = async (account) => {
-    setIsLoading(true);
-    setError('');
-    try {
-      const res = await loginWithGoogle(null, account.id || account.userId);
-      handlePostLoginRedirect(res);
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Test persona login failed');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleGoogleError = () => {
+    setError(isTamil ? 'கூகிள் உள்நுழைவு தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்.' : 'Google sign-in failed. Please try again.');
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8 relative">
-      {/* Top Bar with Language Toggle */}
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
-        <LanguageToggle />
-      </div>
-
+    <div className="min-h-screen bg-transparent flex flex-col justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8 relative">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-orange-100 border border-orange-200 shadow-xs mb-1">
@@ -174,34 +145,32 @@ export function LoginPage() {
             </div>
           )}
 
-          {/* SECTION A: Google OAuth Sign In */}
-          <div>
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={() => setShowAccountChooser(true)}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-[#E7E5E4] rounded-xl shadow-xs bg-white text-xs sm:text-sm font-bold text-[#171717] hover:bg-neutral-50 hover:border-neutral-400 transition-all cursor-pointer disabled:opacity-60"
-            >
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                />
-              </svg>
-              <span>{isTamil ? 'கூகிள் மூலம் உள்நுழைக' : 'Sign in with Google'}</span>
-            </button>
+          {/* SECTION A: Real Google OAuth Sign In */}
+          <div className="flex justify-center">
+            {isLoading ? (
+              <button
+                type="button"
+                disabled
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-[#E7E5E4] rounded-xl bg-white text-xs sm:text-sm font-bold text-[#171717] opacity-60 cursor-not-allowed"
+              >
+                <svg className="w-4 h-4 shrink-0 animate-pulse" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                </svg>
+                <span>{isTamil ? 'கூகிள் மூலம் உள்நுழைகிறது…' : 'Signing in with Google…'}</span>
+              </button>
+            ) : (
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap={false}
+                shape="pill"
+                text="signin_with"
+                width="360"
+              />
+            )}
           </div>
 
           {/* Divider */}
@@ -214,7 +183,7 @@ export function LoginPage() {
           </div>
 
           {/* SECTION B: Manual Login Form */}
-          <form onSubmit={handleManualLogin} className="space-y-4">
+          <form onSubmit={handleManualLogin} autoComplete="off" className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-[#171717] uppercase tracking-wider mb-1">
                 {isTamil ? 'மின்னஞ்சல் அல்லது பயனர் பெயர்' : 'Email or Username'} <span className="text-red-500">*</span>
@@ -224,6 +193,8 @@ export function LoginPage() {
                 <input
                   type="text"
                   required
+                  autoComplete="off"
+                  name="login-identifier"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="name@example.com or username"
@@ -239,13 +210,24 @@ export function LoginPage() {
               <div className="relative">
                 <Lock className="w-4 h-4 text-[#737373] absolute left-3.5 top-3" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
+                  autoComplete="new-password"
+                  name="login-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-3.5 py-2.5 text-xs sm:text-sm bg-neutral-50 rounded-xl border border-[#E7E5E4] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:bg-white"
+                  className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm bg-neutral-50 rounded-xl border border-[#E7E5E4] focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:bg-white"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-2.5 text-[#737373] hover:text-[#171717] cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
@@ -268,87 +250,8 @@ export function LoginPage() {
               {isTamil ? 'குடிமக்கள் கணக்கு உருவாக்குக' : 'Register as Citizen'}
             </Link>
           </div>
-
-          {/* TASK 5: Test Persona Selector */}
-          <div className="pt-2 border-t border-neutral-100">
-            <button
-              type="button"
-              onClick={() => setShowDevPersonas(!showDevPersonas)}
-              className="w-full flex items-center justify-between text-[11px] font-bold text-neutral-500 hover:text-neutral-800 py-1 cursor-pointer"
-            >
-              <span className="flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-orange-500" />
-                <span>{isTamil ? 'சோதனை பயனர்கள் (Development Quick-Test)' : 'Demonstration Test Personas'}</span>
-              </span>
-              {showDevPersonas ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
-
-            {showDevPersonas && (
-              <div className="mt-2.5 grid grid-cols-2 gap-2 p-2.5 bg-neutral-50 rounded-2xl border border-neutral-200">
-                {DEMO_ACCOUNTS.map((acc) => (
-                  <button
-                    key={acc.id}
-                    type="button"
-                    onClick={() => handleTestPersonaLogin(acc)}
-                    className="p-2 rounded-xl bg-white border border-neutral-200 hover:border-orange-500 text-left transition-colors cursor-pointer"
-                  >
-                    <div className="text-[11px] font-bold text-neutral-900 truncate">{acc.name}</div>
-                    <div className="text-[10px] text-orange-600 font-mono uppercase">{acc.role.replace(/_/g, ' ')}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
       </div>
-
-      {/* Google Account Chooser Modal */}
-      {showAccountChooser && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-[#E7E5E4] space-y-4 animate-scale-in">
-            <div className="flex items-center justify-between border-b border-[#E7E5E4] pb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center">
-                  <span className="text-xs font-bold text-blue-600">G</span>
-                </div>
-                <h3 className="text-sm font-bold text-[#171717]">
-                  {isTamil ? 'கூகிள் கணக்கைத் தேர்வு செய்க' : 'Choose a Google Account'}
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAccountChooser(false)}
-                className="text-[#737373] hover:text-[#171717] p-1 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              {DEMO_ACCOUNTS.map((acc) => (
-                <button
-                  key={acc.id}
-                  type="button"
-                  onClick={() => executeGoogleAuth(acc)}
-                  className="w-full flex items-center gap-3 p-3 rounded-2xl border border-[#E7E5E4] hover:border-[#F97316] hover:bg-orange-50/50 text-left transition-all cursor-pointer group"
-                >
-                  <img
-                    src={acc.picture}
-                    alt={acc.name}
-                    className="w-9 h-9 rounded-full object-cover shrink-0 border border-neutral-200"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-xs font-bold text-[#171717] group-hover:text-[#F97316] truncate">
-                      {acc.name}
-                    </div>
-                    <div className="text-[11px] text-[#737373] truncate">{acc.email}</div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

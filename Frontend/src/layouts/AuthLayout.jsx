@@ -1,5 +1,4 @@
 // Frontend/src/layouts/AuthLayout.jsx
-import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { KuralLogo } from '../components/common/KuralLogo';
 import { LanguageToggle } from '../components/common/LanguageToggle';
@@ -46,7 +45,7 @@ export function AuthLayout() {
         </div>
 
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <div className="bg-white py-8 px-5 sm:px-10 shadow-xs border border-[#E7E5E4] rounded-2xl">
+          <div className="bg-white py-8 shadow-xs border border-[#E7E5E4] rounded-2xl">
             <Outlet />
           </div>
         </div>

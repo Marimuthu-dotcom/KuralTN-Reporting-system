@@ -1,5 +1,5 @@
 // Frontend/src/context/AuthContext.jsx
-import React, { createContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/authService';
 import { setTokenRefreshFailedCallback } from '../services/api';
 
