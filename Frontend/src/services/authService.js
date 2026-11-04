@@ -18,6 +18,16 @@ export const authService = {
     return { user, accessToken, refreshToken, authStatus, redirectTo };
   },
 
+  async switchDemoAccount(userId) 
+  {
+  const res = await api.post('/auth/demo-login', { userId });
+  const { user, accessToken, refreshToken, authStatus, redirectTo } = res.data.data;
+  setAccessToken(accessToken);
+  if (user) localStorage.setItem('civic_user', JSON.stringify(user));
+  if (refreshToken) localStorage.setItem('civic_refresh_token', refreshToken);
+  return { user, accessToken, refreshToken, authStatus, redirectTo };
+ },
+
   async login({ identifier, password }) 
   {
     const res = await api.post('/auth/login', {

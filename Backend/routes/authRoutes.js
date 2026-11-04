@@ -12,6 +12,9 @@ router.post('/google', authController.loginWithGoogle);
 router.post('/refresh', authController.refreshToken);
 router.post('/logout', authController.logout);
 router.get('/me', authenticate, authController.getMe);
+router.post('/demo-login', authController.demoLogin);
+// or, if you truly want GET:
+// router.get('/demo-login/:userId', authController.demoLogin);
 
 // Invitation endpoints for invited employees
 router.get('/invitation/:token', authController.getInvitation);

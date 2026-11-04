@@ -2,15 +2,33 @@
 import { createContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/authService';
 import { setTokenRefreshFailedCallback } from '../services/api';
+import { DEMO_ACCOUNTS } from '../utils/constants';
 
 export const AuthContext = createContext(null);
+
+function resolveRedirectPath(role) 
+{
+  switch (role) {
+    case 'WARD_COUNCILLOR':         
+      return '/councillor';
+    case 'ADMIN':                   
+      return '/admin';
+    case 'DEPARTMENT_HANDLER':      
+      return '/councillor/assignments';
+    case 'ACCOUNTABILITY_REVIEWER': 
+      return '/reviewer';
+    default:                        
+      return '/dashboard';
+  }
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
       const cached = localStorage.getItem('civic_user');
       return cached ? JSON.parse(cached) : null;
-    } catch {
+    } 
+    catch {
       return null;
     }
   });
@@ -22,7 +40,9 @@ export function AuthProvider({ children }) {
   const handleLogout = useCallback(async () => {
     try {
       await authService.logout();
-    } catch (err) {
+    } 
+    catch (err) 
+    {
       // Ignore network errors on logout
     } finally {
       setUser(null);
@@ -44,9 +64,11 @@ export function AuthProvider({ children }) {
   // On mount, try silent refresh from stored refresh token or HTTP-only cookie
   useEffect(() => {
     let isMounted = true;
+
     async function initAuth() {
       const storedRefreshToken = localStorage.getItem('civic_refresh_token');
-      if (!storedRefreshToken) {
+      if (!storedRefreshToken) 
+      {
         if (isMounted) setIsLoading(false);
         return;
       }
@@ -90,10 +112,42 @@ export function AuthProvider({ children }) {
       setUser(result.user);
       setAccessTokenState(result.accessToken);
       return result;
-    } finally {
+    } 
+    finally 
+    {
       setIsLoading(false);
     }
   };
+
+  const switchDemoAccount = useCallback((accountOrId) => {
+  const account = typeof accountOrId === 'object' && accountOrId !== null
+      ? accountOrId
+      : DEMO_ACCOUNTS.find(
+          (a) => a.id === accountOrId || a.userId === accountOrId
+        );
+
+  if (!account) return null;
+
+  // Normalize to the shape the rest of the app expects from `user`.
+  const demoUser = {
+    ...account,
+    full_name: account.full_name || account.name,
+    avatar_url: account.avatar_url || account.avatar || account.picture || null,
+  };
+
+  // Persist so a page refresh keeps the selected persona.
+  setUser(demoUser);
+  setAccessTokenState(`demo-token-${account.id}`);
+  localStorage.setItem('civic_user', JSON.stringify(demoUser));
+  localStorage.setItem('civic_access_token', `demo-token-${account.id}`);
+  localStorage.setItem('civic_refresh_token', `demo-refresh-${account.id}`);
+
+  return {
+    user: demoUser,
+    authStatus: 'AUTHENTICATED',
+    redirectTo: resolveRedirectPath(account.role),
+  };
+}, []);
 
   const updateUser = (updatedData) => {
     setUser((prev) => (prev ? { ...prev, ...updatedData } : null));
@@ -107,6 +161,7 @@ export function AuthProvider({ children }) {
     loginWithGoogle,
     logout: handleLogout,
     updateUser,
+    switchDemoAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

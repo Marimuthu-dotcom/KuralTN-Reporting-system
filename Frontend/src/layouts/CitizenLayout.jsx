@@ -1,5 +1,5 @@
 // Frontend/src/layouts/CitizenLayout.jsx
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from '../components/navigation/Sidebar';
 import { Navbar } from '../components/navigation/Navbar';

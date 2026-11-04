@@ -528,7 +528,8 @@ export function createPool() {
   return pool;
 }
 
-export async function pingDB() {
+export async function pingDB() 
+{
   if (!pool) 
     return false;
   try {
@@ -553,12 +554,15 @@ export async function withTransaction(fn) {
   if (!pool) 
     createPool();
   const conn = await pool.getConnection();
-  try {
+  try 
+  {
     await conn.beginTransaction();
     const result = await fn(conn);
     await conn.commit();
     return result;
-  } catch (err) {
+  } 
+  catch (err) 
+  {
     await conn.rollback();
     throw err;
   } finally {

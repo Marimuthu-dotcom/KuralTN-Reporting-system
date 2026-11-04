@@ -78,6 +78,20 @@ export const authController = {
     );
   }),
 
+  demoLogin: asyncHandler(async (req, res) => {
+  const { userId } = req.body; // or req.params.userId for GET
+  const { user, accessToken, refreshToken, authStatus, redirectTo } =
+    await authService.loginAsDemoUser(userId);
+
+  res.cookie(JWT_CONFIG.cookieName, refreshToken, JWT_CONFIG.cookieOptions);
+
+  return successResponse(
+    res,
+    { user, accessToken, refreshToken, authStatus, redirectTo },
+    'Demo session started'
+  );
+}),
+
   getInvitation: asyncHandler(async (req, res) => {
     const { token } = req.params;
     const invitation = await authService.validateInvitation(token);

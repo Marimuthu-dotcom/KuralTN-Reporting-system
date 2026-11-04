@@ -6,26 +6,140 @@ import { getDB, persistDB } from '../config/db.js';
 import { AppError } from '../utils/AppError.js';
 
 export const authService = {
-  async authenticateGoogle(credential, demoUserId = null) 
-  {
+  /**
+   * Central role -> landing route mapping.
+   * Keep this in ONE place so demo login, Google login, and refresh all agree.
+   */
+  resolveRedirectPath(role) {
+    switch (role) {
+      case 'WARD_COUNCILLOR':
+        return '/councillor';
+      case 'ADMIN':
+        return '/admin';
+      case 'DEPARTMENT_HANDLER':
+        return '/councillor/assignments';
+      case 'ACCOUNTABILITY_REVIEWER':
+        return '/reviewer';
+      default:
+        return '/dashboard';
+    }
+  },
+
+  /**
+   * Issue an access + refresh token pair and persist the refresh session.
+   * Shared by Google auth and demo login so they can't drift apart.
+   */
+  _issueSession(user) {
+    const payload = {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      ward_id: user.ward_id,
+      is_ward_verified: Boolean(user.is_ward_verified),
+    };
+
+    const accessToken = signAccessToken(payload);
+    const refreshToken = signRefreshToken(payload);
+
+    const db = getDB();
+    db.refresh_tokens.push({
+      id: `rt-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      user_id: user.id,
+      token_hash: hashToken(refreshToken),
+      family_id: `fam-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      is_revoked: false,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date().toISOString(),
+    });
+    persistDB();
+
+    return { accessToken, refreshToken };
+  },
+
+  /**
+   * DEMO ACCOUNT SWITCH — does NOT perform Google OAuth.
+   * Looks up an existing DB user by id and creates a session for them.
+   * Intended for the demo workflow only.
+   */
+  async loginAsDemoUser(userId) {
+    if (!userId) {
+      throw new AppError('Demo user id is required', 400);
+    }
+
+    const user = userRepository.findById(userId);
+    if (!user) {
+      throw new AppError('Specified demo user account not found', 404);
+    }
+    if (!user.is_active || user.approval_status === 'SUSPENDED') {
+      throw new AppError(
+        'This user account has been suspended or restricted by municipal administration.',
+        403
+      );
+    }
+    if (user.approval_status === 'REJECTED') {
+      throw new AppError(
+        'This account registration was declined by the system administrator.',
+        403
+      );
+    }
+
+    // Mirror the same gating rules used in the Google path so demo behaves consistently.
+    let authStatus = 'AUTHENTICATED';
+    let redirectTo = '/dashboard';
+
+    if (user.approval_status === 'PENDING_APPROVAL' || user.role === 'PENDING') {
+      authStatus = 'PENDING_APPROVAL';
+      redirectTo = '/pending-approval';
+    } else if (
+      !user.address_line ||
+      !user.ward_id ||
+      user.registration_status === 'PENDING_DETAILS'
+    ) {
+      authStatus = 'INCOMPLETE_REGISTRATION';
+      redirectTo = '/onboarding';
+    } else if (
+      user.role === 'CITIZEN' &&
+      (!user.is_ward_verified || user.ward_verification_status === 'PENDING')
+    ) {
+      authStatus = 'PENDING_WARD_VERIFICATION';
+      redirectTo = '/verification-pending';
+    } else if (
+      user.role === 'CITIZEN' &&
+      user.ward_verification_status === 'REJECTED'
+    ) {
+      authStatus = 'WARD_VERIFICATION_REJECTED';
+      redirectTo = '/verification-pending';
+    } else {
+      authStatus = 'AUTHENTICATED';
+      redirectTo = this.resolveRedirectPath(user.role);
+    }
+
+    const { accessToken, refreshToken } = this._issueSession(user);
+
+    return { user, accessToken, refreshToken, authStatus, redirectTo };
+  },
+
+  async authenticateGoogle(credential, demoUserId = null) {
     let user = null;
     let authStatus = 'AUTHENTICATED';
     let redirectTo = '/dashboard';
 
-    if (demoUserId) 
-    {
+    if (demoUserId) {
       user = userRepository.findById(demoUserId);
-      if (!user) 
-      {
+      if (!user) {
         throw new AppError('Specified demo user account not found', 404);
       }
-      if (!user.is_active || user.approval_status === 'SUSPENDED') 
-      {
-        throw new AppError('This user account has been suspended or restricted by municipal administration.', 403);
+      if (!user.is_active || user.approval_status === 'SUSPENDED') {
+        throw new AppError(
+          'This user account has been suspended or restricted by municipal administration.',
+          403
+        );
       }
-      if (user.approval_status === 'REJECTED') 
-      {
-        throw new AppError('This account registration was declined by the system administrator.', 403);
+      if (user.approval_status === 'REJECTED') {
+        throw new AppError(
+          'This account registration was declined by the system administrator.',
+          403
+        );
       }
 
       // Check approval status first
@@ -34,19 +148,22 @@ export const authService = {
         redirectTo = '/pending-approval';
       }
       // Check registration status for demo user
-      else if (!user.address_line || !user.ward_id || user.registration_status === 'PENDING_DETAILS') {
+      else if (
+        !user.address_line ||
+        !user.ward_id ||
+        user.registration_status === 'PENDING_DETAILS'
+      ) {
         authStatus = 'INCOMPLETE_REGISTRATION';
         redirectTo = '/onboarding';
-      } else if (user.role === 'CITIZEN' && (!user.is_ward_verified || user.ward_verification_status === 'PENDING')) {
+      } else if (
+        user.role === 'CITIZEN' &&
+        (!user.is_ward_verified || user.ward_verification_status === 'PENDING')
+      ) {
         authStatus = 'PENDING_WARD_VERIFICATION';
         redirectTo = '/verification-pending';
       } else {
         authStatus = 'AUTHENTICATED';
-        if (user.role === 'WARD_COUNCILLOR') redirectTo = '/councillor';
-        else if (user.role === 'ADMIN') redirectTo = '/admin';
-        else if (user.role === 'DEPARTMENT_HANDLER') redirectTo = '/councillor/assignments';
-        else if (user.role === 'ACCOUNTABILITY_REVIEWER') redirectTo = '/reviewer';
-        else redirectTo = '/dashboard';
+        redirectTo = this.resolveRedirectPath(user.role);
       }
     } else {
       const googlePayload = await verifyGoogleToken(credential);
@@ -78,7 +195,7 @@ export const authService = {
             full_name: googlePayload.name || '',
             avatar_url: googlePayload.picture || null,
             phone: null,
-            role: 'PENDING', // Unprivileged pending state; cannot access app features until approved
+            role: 'PENDING',
             approval_status: 'PENDING_APPROVAL',
             ward_id: null,
             claimed_ward_id: null,
@@ -96,18 +213,17 @@ export const authService = {
         );
 
         // Step 2: Notify the System Administrator
-        // Create a persistent account-approval request
         const approvalReq = userRepository.createApprovalRequest({
           user_id: user.id,
           user_name: user.full_name,
           user_email: user.email,
           avatar_url: user.avatar_url,
-          requested_role: 'CITIZEN', // Requested role only, not assigned
+          requested_role: 'CITIZEN',
           status: 'PENDING',
-          notes: 'New account registered via Google OAuth awaiting administrator verification and role assignment',
+          notes:
+            'New account registered via Google OAuth awaiting administrator verification and role assignment',
         });
 
-        // Persistent notification for all System Administrators
         const db = getDB();
         const adminUsers = db.users.filter((u) => u.role === 'ADMIN');
         adminUsers.forEach((admin) => {
@@ -130,76 +246,49 @@ export const authService = {
       } else {
         // Account existence confirmed
         if (!user.is_active || user.approval_status === 'SUSPENDED') {
-          throw new AppError('Your account has been suspended or restricted by municipal administration. Please contact the civic cell.', 403);
+          throw new AppError(
+            'Your account has been suspended or restricted by municipal administration. Please contact the civic cell.',
+            403
+          );
         }
 
         if (user.approval_status === 'REJECTED') {
-          throw new AppError('Your account registration application was declined by the administrator.', 403);
+          throw new AppError(
+            'Your account registration application was declined by the administrator.',
+            403
+          );
         }
 
-        // If approval is pending or role is PENDING, deny application access and show pending approval page
         if (user.approval_status === 'PENDING_APPROVAL' || user.role === 'PENDING') {
           authStatus = 'PENDING_APPROVAL';
           redirectTo = '/pending-approval';
-        }
-        // Case B: Existing account with incomplete personal information
-        else if (!user.address_line || !user.ward_id || user.registration_status === 'PENDING_DETAILS') {
+        } else if (
+          !user.address_line ||
+          !user.ward_id ||
+          user.registration_status === 'PENDING_DETAILS'
+        ) {
           authStatus = 'INCOMPLETE_REGISTRATION';
           redirectTo = '/onboarding';
-        }
-        // Case B (sub-case): Pending ward verification
-        else if (user.role === 'CITIZEN' && (!user.is_ward_verified || user.ward_verification_status === 'PENDING')) {
+        } else if (
+          user.role === 'CITIZEN' &&
+          (!user.is_ward_verified || user.ward_verification_status === 'PENDING')
+        ) {
           authStatus = 'PENDING_WARD_VERIFICATION';
           redirectTo = '/verification-pending';
-        }
-        // Case B (sub-case): Rejected ward verification
-        else if (user.role === 'CITIZEN' && user.ward_verification_status === 'REJECTED') {
+        } else if (
+          user.role === 'CITIZEN' &&
+          user.ward_verification_status === 'REJECTED'
+        ) {
           authStatus = 'WARD_VERIFICATION_REJECTED';
           redirectTo = '/verification-pending';
-        }
-        // Case A: Existing and fully approved account
-        else {
+        } else {
           authStatus = 'AUTHENTICATED';
-          if (user.role === 'WARD_COUNCILLOR') {
-            redirectTo = '/councillor';
-          } else if (user.role === 'ADMIN') {
-            redirectTo = '/admin';
-          } else if (user.role === 'DEPARTMENT_HANDLER') {
-            redirectTo = '/councillor/assignments';
-          } else if (user.role === 'ACCOUNTABILITY_REVIEWER') {
-            redirectTo = '/reviewer';
-          } else {
-            redirectTo = '/dashboard';
-          }
+          redirectTo = this.resolveRedirectPath(user.role);
         }
       }
     }
 
-    const payload = {
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-      ward_id: user.ward_id,
-      is_ward_verified: Boolean(user.is_ward_verified),
-    };
-
-    const accessToken = signAccessToken(payload);
-    const refreshToken = signRefreshToken(payload);
-
-    // Save refresh token session
-    const db = getDB();
-    const tokenHash = hashToken(refreshToken);
-    db.refresh_tokens.push({
-      id: `rt-${Date.now()}`,
-      user_id: user.id,
-      token_hash: tokenHash,
-      family_id: `fam-${Date.now()}`,
-      is_revoked: false,
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      created_at: new Date().toISOString(),
-    });
-    persistDB();
-
+    const { accessToken, refreshToken } = this._issueSession(user);
     return { user, accessToken, refreshToken, authStatus, redirectTo };
   },
 
@@ -217,7 +306,9 @@ export const authService = {
 
     const db = getDB();
     const tokenHash = hashToken(refreshToken);
-    let session = db.refresh_tokens.find((t) => t.token_hash === tokenHash && !t.is_revoked);
+    let session = db.refresh_tokens.find(
+      (t) => t.token_hash === tokenHash && !t.is_revoked
+    );
 
     // If not found active, check if this token was rotated very recently (grace window for concurrent requests)
     if (!session) {
@@ -229,7 +320,6 @@ export const authService = {
           Date.now() - new Date(t.revoked_at).getTime() < 60000
       );
       if (recentlyRevoked) {
-        // Return latest active token for this family if already issued
         const currentActive = db.refresh_tokens.find(
           (t) => t.family_id === recentlyRevoked.family_id && !t.is_revoked
         );
@@ -240,12 +330,15 @@ export const authService = {
     }
 
     const user = userRepository.findById(decoded.userId);
-    if (!user || !user.is_active || user.approval_status === 'SUSPENDED' || user.approval_status === 'REJECTED') {
+    if (
+      !user ||
+      !user.is_active ||
+      user.approval_status === 'SUSPENDED' ||
+      user.approval_status === 'REJECTED'
+    ) {
       throw new AppError('User account is suspended, declined, or not found', 401);
     }
 
-    // If session was not found in array (e.g. storage reload or fresh instance),
-    // but the token is cryptographically verified and user is valid, bootstrap the session
     const familyId = session?.family_id || `fam-${Date.now()}`;
     if (session) {
       session.is_revoked = true;

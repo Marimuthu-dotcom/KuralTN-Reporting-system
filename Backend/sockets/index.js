@@ -8,12 +8,17 @@ export function setupSocketIO(io) {
   io.use(socketAuthMiddleware);
 
   io.on('connection', (socket) => {
+
+    console.log('Socket connected successfully!');
+    console.log('Socket ID:', socket.id);
+
     registerWardChatHandlers(io, socket);
     registerComplaintHandlers(io, socket);
     registerNotificationHandlers(io, socket);
 
-    socket.on('disconnect', () => {
-      // Clean up
+    socket.on('disconnect', (reason) => {
+      console.log('Socket disconnected:', socket.id);
+      console.log('Reason:', reason);
     });
   });
 }

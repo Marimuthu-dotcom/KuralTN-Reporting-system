@@ -1,5 +1,5 @@
 // Frontend/src/pages/citizen/CitizenDashboardPage.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   PlusCircle,
@@ -34,7 +34,8 @@ import {
   AnimatedMegaphone,
 } from '../../components/common/AnimatedIcons';
 
-export function CitizenDashboardPage() {
+export function CitizenDashboardPage() 
+{
   const { user, updateUser } = useAuth();
   const { t, isTamil } = useLanguage();
   const { wards } = useWard();

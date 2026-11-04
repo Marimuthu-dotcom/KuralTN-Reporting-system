@@ -1,10 +1,10 @@
-// Frontend/src/components/common/ErrorBoundary.jsx
 import React from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
 import { Button } from './Button';
 
 export class ErrorBoundary extends React.Component {
-  constructor(props) {
+  constructor(props) 
+  {
     super(props);
     this.state = { hasError: false, error: null };
   }

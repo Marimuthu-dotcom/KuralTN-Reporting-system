@@ -5,6 +5,19 @@ import axios from 'axios';
 let currentAccessToken = localStorage.getItem('civic_access_token') || null;
 let onTokenRefreshFailedCallback = null;
 
+// Demo sessions use non-JWT placeholder tokens. They must never be sent to the
+// backend and must never trigger the refresh flow.
+const DEMO_TOKEN_PREFIX = 'demo-token-';
+const DEMO_REFRESH_PREFIX = 'demo-refresh-';
+
+function isDemoToken(token) {
+  return typeof token === 'string' && token.startsWith(DEMO_TOKEN_PREFIX);
+}
+
+function isDemoRefreshToken(token) {
+  return typeof token === 'string' && token.startsWith(DEMO_REFRESH_PREFIX);
+}
+
 export function setAccessToken(token) {
   currentAccessToken = token;
   if (token) {
@@ -36,7 +49,10 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = getAccessToken();
-    if (token && !config.headers.Authorization) {
+
+    // Skip Authorization header for demo placeholder tokens — the backend
+    // would reject them as invalid JWTs.
+    if (token && !isDemoToken(token) && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -63,6 +79,14 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const activeToken = getAccessToken();
+    const activeRefreshToken = localStorage.getItem('civic_refresh_token');
+
+    // Demo sessions: never attempt refresh. Propagate the error so callers
+    // (or mock-data fallbacks) can handle it without a 401 loop.
+    if (isDemoToken(activeToken) || isDemoRefreshToken(activeRefreshToken)) {
+      return Promise.reject(error);
+    }
 
     // Check if error is 401 and request hasn't been retried yet
     const isAuthError = error.response && error.response.status === 401;
@@ -92,6 +116,10 @@ api.interceptors.response.use(
         const storedRefreshToken = localStorage.getItem('civic_refresh_token');
         if (!storedRefreshToken) {
           throw new Error('No stored refresh token');
+        }
+        // Demo refresh tokens cannot be exchanged — bail before hitting the API.
+        if (isDemoRefreshToken(storedRefreshToken)) {
+          throw new Error('Demo session does not support token refresh');
         }
         const refreshResponse = await axios.post(
           `${baseURL}/auth/refresh`,

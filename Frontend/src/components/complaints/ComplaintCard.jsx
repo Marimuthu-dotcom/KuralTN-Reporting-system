@@ -163,7 +163,7 @@ export function ComplaintCard({ complaint, onSupportChange }) {
           />
 
           <Link
-            to={`/complaints/${complaint.id}#comments`}
+            to={`api/${complaint.id}#comments`}
             className="flex items-center gap-1 text-[#737373] hover:text-[#171717] font-semibold"
           >
             <MessageSquare className="w-3.5 h-3.5" />

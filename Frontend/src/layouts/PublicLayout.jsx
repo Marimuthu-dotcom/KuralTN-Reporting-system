@@ -8,7 +8,8 @@ import { MobileNavigation } from '../components/navigation/MobileNavigation';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 
-export function PublicLayout() {
+export function PublicLayout() 
+{
   const { isAuthenticated, user } = useAuth();
   const { t, isTamil } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -18,7 +19,8 @@ export function PublicLayout() {
   // but on "/complaints", "/departments", "/help", etc., if logged in, provide the full portal sidebar!
   const isLandingRoot = location.pathname === '/';
 
-  if (isAuthenticated && !isLandingRoot) {
+  if (isAuthenticated && !isLandingRoot) 
+  {
     return (
       <div className="min-h-screen flex bg-[#FAF9F6]">
         {/* Desktop Left Sidebar */}

@@ -24,6 +24,7 @@ const bootstrap = async () => {
   const server = http.createServer(app);
 
   const io = initSocketIO(server);
+  console.log('Socket.IO server initialized successfully');
   setupSocketIO(io);
 
   // Background jobs — every 60s

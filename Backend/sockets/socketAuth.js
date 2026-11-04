@@ -2,7 +2,8 @@
 import { verifyAccessToken } from '../utils/tokenUtils.js';
 import { getDB } from '../config/db.js';
 
-export function socketAuthMiddleware(socket, next) {
+export function socketAuthMiddleware(socket, next) 
+{
   const token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.replace('Bearer ', '');
 
   if (!token) {
@@ -16,14 +17,20 @@ export function socketAuthMiddleware(socket, next) {
     const db = getDB();
     const user = db.users.find((u) => u.id === decoded.userId && u.is_active);
 
-    if (user) {
+    if (user) 
+    {
       socket.user = user;
-    } else {
+    } 
+    else 
+    {
       socket.user = null;
     }
-  } catch (err) {
+  } 
+  catch (err) 
+ {
     socket.user = null;
   }
 
   next();
 }
+

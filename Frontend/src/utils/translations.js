@@ -7,7 +7,7 @@ export const translations = {
     stateTagline: 'Tamil Nadu Civic Resolution Network',
     activeRole: 'Active Role',
     registeredWard: 'Registered Ward',
-    roleSwitcher: 'Test Persona',
+    roleSwitcher: 'Test Personal',
 
     // Nav Items
     navHome: 'Home',

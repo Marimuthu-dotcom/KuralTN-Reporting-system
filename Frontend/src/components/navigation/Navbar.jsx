@@ -22,7 +22,7 @@ import { KuralLogo } from '../common/KuralLogo';
 import { DEMO_ACCOUNTS } from '../../utils/constants';
 
 export function Navbar({ onMobileMenuToggle, title }) {
-  const { user, loginWithGoogle, logout, isAuthenticated } = useAuth();
+  const { user, switchDemoAccount, logout, isAuthenticated } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const { t, isTamil } = useLanguage();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -38,25 +38,11 @@ export function Navbar({ onMobileMenuToggle, title }) {
     ? '/admin'
     : '/dashboard';
 
-  const handleSwitchDemoAccount = async (account) => {
-    try {
-      const res = await loginWithGoogle(null, account.id || account.userId);
-      setShowNotifications(false);
-      if (res?.redirectTo) {
-        navigate(res.redirectTo);
-      } else if (account.role === 'WARD_COUNCILLOR') {
-        navigate('/councillor');
-      } else if (account.role === 'ADMIN') {
-        navigate('/admin');
-      } else if (account.role === 'DEPARTMENT_HANDLER') {
-        navigate('/councillor/assignments');
-      } else {
-        navigate('/dashboard');
-      }
-    } catch (err) {
-      console.error('Failed to switch demo account:', err);
-    }
-  };
+  const handleSwitchDemoAccount = (account) => {
+  const res = switchDemoAccount(account);
+  setShowNotifications(false);
+  navigate(res?.redirectTo || '/dashboard');
+};
 
   const userMenuItems = [
     {

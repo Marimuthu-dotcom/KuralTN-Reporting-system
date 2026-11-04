@@ -1,5 +1,4 @@
 // Frontend/src/components/navigation/MobileNavigation.jsx
-import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Home, PlusCircle, FileText, Users, Bell } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -16,7 +15,7 @@ export function MobileNavigation() {
   const isCitizen = user.role === 'CITIZEN';
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-[#E7E5E4] z-40 px-2 py-1.5 flex items-center justify-around shadow-lg">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-[#E7E5E4] z-40 px-1 py-1.5 flex items-center justify-around shadow-lg">
       <NavLink
         to={isCitizen ? '/dashboard' : user.role === 'WARD_COUNCILLOR' ? '/councillor' : '/admin'}
         className={({ isActive }) =>

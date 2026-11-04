@@ -8,7 +8,8 @@ export function ProtectedRoute({ children }) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
-  if (isLoading) {
+  if (isLoading) 
+  {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAF9F6]">
         <LoadingSpinner size="lg" />
@@ -16,7 +17,8 @@ export function ProtectedRoute({ children }) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated) 
+  {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -24,7 +26,8 @@ export function ProtectedRoute({ children }) {
   if (
     (user?.approval_status === 'PENDING_APPROVAL' || user?.role === 'PENDING' || user?.approval_status === 'REJECTED') &&
     location.pathname !== '/pending-approval'
-  ) {
+  ) 
+  {
     return <Navigate to="/pending-approval" replace />;
   }
 
@@ -32,7 +35,8 @@ export function ProtectedRoute({ children }) {
   if (
     user?.registration_status === 'PENDING_DETAILS' &&
     location.pathname !== '/onboarding'
-  ) {
+  ) 
+  {
     return <Navigate to="/onboarding" replace />;
   }
 
@@ -41,7 +45,8 @@ export function ProtectedRoute({ children }) {
     user?.role === 'CITIZEN' &&
     (!user?.is_ward_verified || user?.ward_verification_status === 'PENDING') &&
     (location.pathname === '/ward' || location.pathname === '/ward/announcements')
-  ) {
+  ) 
+  {
     return <Navigate to="/verification-pending" replace />;
   }
 

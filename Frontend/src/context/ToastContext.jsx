@@ -4,14 +4,17 @@ import { Toast } from '../components/common/Toast';
 
 const ToastContext = createContext(null);
 
-export function ToastProvider({ children }) {
+export function ToastProvider({ children }) 
+{
   const [toasts, setToasts] = useState([]);
 
-  const removeToast = useCallback((id) => {
+  const removeToast = useCallback((id) => 
+  {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const addToast = useCallback((message, type = 'info', duration = 3500) => {
+  const addToast = useCallback((message, type = 'info', duration = 3500) => 
+  {
     const id = Date.now() + Math.random().toString(36).substring(2, 6);
     setToasts((prev) => [...prev, { id, message, type }]);
 
@@ -44,9 +47,11 @@ export function ToastProvider({ children }) {
   );
 }
 
-export function useToast() {
+export function useToast() 
+{
   const ctx = useContext(ToastContext);
-  if (!ctx) {
+  if (!ctx) 
+  {
     return {
       showSuccess: (m) => console.log('Toast (success):', m),
       showError: (m) => console.error('Toast (error):', m),
