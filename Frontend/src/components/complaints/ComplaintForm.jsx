@@ -9,15 +9,25 @@ import { useLanguage } from '../../hooks/useLanguage';
 import { departmentService } from '../../services/departmentService';
 import { AnimatedCamera, AnimatedPin, AnimatedShield } from '../common/AnimatedIcons';
 
+const LOCAL_DEPARTMENTS = [
+  { id: 'dept-pw', code: 'PWD-ROADS', name: 'Highways & Roads Engineering', name_ta: 'நெடுஞ்சாலை மற்றும் சாலைப் பொறியியல்', sla_standard_days: 7, category_ids: ['cat-roads'] },
+  { id: 'dept-water', code: 'TWAD-WATER', name: 'Drinking Water Supply Wing', name_ta: 'குடிநீர் வழங்கல் பிரிவு', sla_standard_days: 3, category_ids: ['cat-water'] },
+  { id: 'dept-drain', code: 'SWD-DRAIN', name: 'Drainage & Sewerage Board', name_ta: 'பாதாள சாக்கடை மற்றும் வடிகால் வாரியம்', sla_standard_days: 5, category_ids: ['cat-drainage'] },
+  { id: 'dept-swm', code: 'SWM-CLEAN', name: 'Solid Waste Management', name_ta: 'திடக்கழிவு மேலாண்மை', sla_standard_days: 2, category_ids: ['cat-waste'] },
+  { id: 'dept-elec', code: 'TANGEDCO-SL', name: 'Street Lighting & Electrical Wing', name_ta: 'தெருவிளக்கு & மின்சாரப் பிரிவு', sla_standard_days: 4, category_ids: ['cat-lights'] },
+];
+
 export function ComplaintForm({ onSubmit, isLoading = false, defaultWardId }) {
   const { wards, categories } = useWard();
   const { t, getCategoryTitle, isTamil } = useLanguage();
-  const [departments, setDepartments] = useState([]);
+  const [departments, setDepartments] = useState(LOCAL_DEPARTMENTS);
 
   useEffect(() => {
     departmentService.getDepartments()
-      .then((data) => setDepartments(data || []))
-      .catch((err) => console.error('Failed to load departments in form:', err));
+      .then((data) => {
+        if (data?.length) setDepartments(data);
+      })
+      .catch(() => {});
   }, []);
 
   const [formData, setFormData] = useState({

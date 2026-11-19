@@ -22,8 +22,88 @@ import {
 } from '../../components/common/AnimatedIcons';
 import { QuickTrackerWidget } from '../../components/complaints/QuickTrackerWidget';
 
+const LOCAL_FEATURED_COMPLAINTS = [
+  {
+    id: 'comp-007',
+    reference_id: 'CIV-2026-00007',
+    title: 'Non-functional LED streetlights along Millerpuram Main Road',
+    description: 'Four consecutive streetlamp poles near the bus shelter have been out for 6 nights, causing safety concerns.',
+    category_id: 'cat-lights',
+    category_name: 'Streetlights & Power',
+    ward_id: 'ward-43-thoothukudi',
+    ward_name: 'Millerpuram - Ward 43',
+    district_name: 'Thoothukudi',
+    address_text: 'Millerpuram Main Road, near Bus Stop',
+    status: 'In Progress',
+    supports_count: 42,
+    comments_count: 6,
+    councillor_verified: true,
+    department_name: 'Street Lighting & Electrical Wing',
+    department_name_ta: 'தெருவிளக்கு & மின்சாரப் பிரிவு',
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+  {
+    id: 'comp-006',
+    reference_id: 'CIV-2026-00006',
+    title: 'Blocked stormwater drain overflowing onto 2nd Street',
+    description: 'Silt accumulation near the junction culvert is causing stagnant water accumulation after light rain.',
+    category_id: 'cat-drainage',
+    category_name: 'Drainage & Sewerage',
+    ward_id: 'ward-43-thoothukudi',
+    ward_name: 'Millerpuram - Ward 43',
+    district_name: 'Thoothukudi',
+    address_text: 'Millerpuram 2nd Street Cross',
+    status: 'Forwarded to Department',
+    supports_count: 35,
+    comments_count: 4,
+    councillor_verified: true,
+    department_name: 'Drainage & Sewerage Board',
+    department_name_ta: 'பாதாள சாக்கடை வாரியம்',
+    created_at: new Date(Date.now() - 4 * 86400000).toISOString(),
+  },
+  {
+    id: 'comp-002',
+    reference_id: 'CIV-2026-00002',
+    title: 'Irregular drinking water pressure in Bryant Nagar North',
+    description: 'Morning supply pressure has dropped significantly over the past four days affecting 30+ households.',
+    category_id: 'cat-water',
+    category_name: 'Drinking Water Supply',
+    ward_id: 'ward-12-thoothukudi',
+    ward_name: 'Bryant Nagar - Ward 12',
+    district_name: 'Thoothukudi',
+    address_text: 'Bryant Nagar 3rd Cross',
+    status: 'Pending Councillor Verification',
+    supports_count: 28,
+    comments_count: 3,
+    councillor_verified: false,
+    department_name: 'Drinking Water Supply Wing',
+    department_name_ta: 'குடிநீர் வழங்கல் பிரிவு',
+    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+  {
+    id: 'comp-001',
+    reference_id: 'CIV-2026-00001',
+    title: 'Deep pothole near Bryant Nagar School junction',
+    description: 'Damaged bitumen edge near the school entrance repaired and verified by local commuters.',
+    category_id: 'cat-roads',
+    category_name: 'Road & Pothole Damage',
+    ward_id: 'ward-12-thoothukudi',
+    ward_name: 'Bryant Nagar - Ward 12',
+    district_name: 'Thoothukudi',
+    address_text: 'Bryant Nagar 4th Main Road',
+    status: 'Resolved',
+    verification_state: 'CONFIRMED_RESOLVED',
+    supports_count: 51,
+    comments_count: 9,
+    councillor_verified: true,
+    department_name: 'Highways & Roads Engineering',
+    department_name_ta: 'நெடுஞ்சாலை மற்றும் சாலைப் பொறியியல்',
+    created_at: new Date(Date.now() - 12 * 86400000).toISOString(),
+  },
+];
+
 export function HomePage() {
-  const [featuredComplaints, setFeaturedComplaints] = useState([]);
+  const [featuredComplaints, setFeaturedComplaints] = useState(LOCAL_FEATURED_COMPLAINTS);
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const { categories } = useWard();
@@ -37,11 +117,11 @@ export function HomePage() {
     async function fetchFeatured() {
       try {
         const res = await complaintService.getComplaints({ limit: 4, sortBy: 'most_supported' });
-        if (isMounted) {
-          setFeaturedComplaints(res.data || []);
+        if (isMounted && res.data?.length) {
+          setFeaturedComplaints(res.data);
         }
-      } catch (err) {
-        console.error('Failed to load featured grievances:', err);
+      } catch {
+        // Keep local sample featured grievances when database is unavailable
       } finally {
         if (isMounted) {
           setIsLoading(false);

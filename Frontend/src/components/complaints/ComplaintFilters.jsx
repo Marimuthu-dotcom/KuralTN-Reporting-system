@@ -5,6 +5,14 @@ import { useWard } from '../../hooks/useWard';
 import { useLanguage } from '../../hooks/useLanguage';
 import { departmentService } from '../../services/departmentService';
 
+const LOCAL_DEPARTMENTS = [
+  { id: 'dept-pw', name: 'Highways & Roads Engineering', name_ta: 'நெடுஞ்சாலை மற்றும் சாலைப் பொறியியல்' },
+  { id: 'dept-water', name: 'Drinking Water Supply Wing', name_ta: 'குடிநீர் வழங்கல் பிரிவு' },
+  { id: 'dept-drain', name: 'Drainage & Sewerage Board', name_ta: 'பாதாள சாக்கடை வாரியம்' },
+  { id: 'dept-swm', name: 'Solid Waste Management', name_ta: 'திடக்கழிவு மேலாண்மை' },
+  { id: 'dept-elec', name: 'Street Lighting & Electrical Wing', name_ta: 'தெருவிளக்கு & மின்சாரப் பிரிவு' },
+];
+
 export function ComplaintFilters({
   filters = {},
   onChange,
@@ -13,12 +21,14 @@ export function ComplaintFilters({
 }) {
   const { districts, wards, categories } = useWard();
   const { t, getCategoryTitle, getStatusLabel, isTamil } = useLanguage();
-  const [departments, setDepartments] = useState([]);
+  const [departments, setDepartments] = useState(LOCAL_DEPARTMENTS);
 
   useEffect(() => {
     departmentService.getDepartments()
-      .then((data) => setDepartments(data || []))
-      .catch((err) => console.error('Failed to load departments:', err));
+      .then((data) => {
+        if (data?.length) setDepartments(data);
+      })
+      .catch(() => {});
   }, []);
 
   const statusOptions = [

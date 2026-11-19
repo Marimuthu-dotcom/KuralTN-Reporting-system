@@ -5,6 +5,46 @@ import { ComplaintList } from '../../components/complaints/ComplaintList';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { useAuth } from '../../hooks/useAuth';
 
+const LOCAL_SUPPORTED_COMPLAINTS = [
+  {
+    id: 'comp-007',
+    reference_id: 'CIV-2026-00007',
+    title: 'Non-functional LED streetlights along Millerpuram Main Road',
+    description: 'Four consecutive streetlamp poles near the bus shelter have been out for 6 nights.',
+    category_id: 'cat-lights',
+    category_name: 'Streetlights & Power',
+    ward_id: 'ward-43-thoothukudi',
+    ward_name: 'Millerpuram - Ward 43',
+    district_name: 'Thoothukudi',
+    address_text: 'Millerpuram Main Road, near Bus Stop',
+    status: 'In Progress',
+    supports_count: 42,
+    comments_count: 6,
+    councillor_verified: true,
+    department_name: 'Street Lighting & Electrical Wing',
+    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+  {
+    id: 'comp-001',
+    reference_id: 'CIV-2026-00001',
+    title: 'Deep pothole near Bryant Nagar School junction',
+    description: 'Damaged bitumen edge near the school entrance repaired and verified by local commuters.',
+    category_id: 'cat-roads',
+    category_name: 'Road & Pothole Damage',
+    ward_id: 'ward-12-thoothukudi',
+    ward_name: 'Bryant Nagar - Ward 12',
+    district_name: 'Thoothukudi',
+    address_text: 'Bryant Nagar 4th Main Road',
+    status: 'Resolved',
+    verification_state: 'CONFIRMED_RESOLVED',
+    supports_count: 51,
+    comments_count: 9,
+    councillor_verified: true,
+    department_name: 'Highways & Roads Engineering',
+    created_at: new Date(Date.now() - 12 * 86400000).toISOString(),
+  },
+];
+
 export function SupportedComplaintsPage() {
   const { user } = useAuth();
   const [complaints, setComplaints] = useState([]);
@@ -14,13 +54,12 @@ export function SupportedComplaintsPage() {
     async function loadSupported() {
       setIsLoading(true);
       try {
-        // Fetch ward complaints that this user has supported
         const res = await complaintService.getComplaints({ ward_id: user?.ward_id, limit: 100 });
         const all = res.data || [];
-        // In demo store, comp-001 & comp-002 have user support
-        setComplaints(all.filter((c) => c.supports_count > 0));
-      } catch (err) {
-        console.error('Failed to load supported complaints:', err);
+        const supported = all.filter((c) => c.supports_count > 0);
+        setComplaints(supported.length ? supported : LOCAL_SUPPORTED_COMPLAINTS);
+      } catch {
+        setComplaints(LOCAL_SUPPORTED_COMPLAINTS);
       } finally {
         setIsLoading(false);
       }

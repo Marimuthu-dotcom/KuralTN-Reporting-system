@@ -2,7 +2,7 @@
 -- Development Seed Data for Tamil Nadu Civic Grievance System
 -- Fictional entities and demonstration accounts for Thoothukudi, Tirunelveli, and Tenkasi
 
-USE civic_grievance;
+USE kuraltn;
 
 -- 1. Insert Roles
 INSERT INTO roles (id, name, description) VALUES

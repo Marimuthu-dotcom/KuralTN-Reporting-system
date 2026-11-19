@@ -65,8 +65,27 @@ export function AccountPendingApprovalPage() {
             : 'Verification is currently pending. The System Administrator will review your account shortly.'
         );
       }
-    } catch (err) {
-      setErrorNotice(err.response?.data?.message || 'Failed to refresh status from server.');
+    } catch {
+      if (user?.approval_status === 'APPROVED' && user?.role !== 'PENDING') {
+        setNotice(
+          isTamil
+            ? `உங்கள் கணக்கு அங்கீகரிக்கப்பட்டது (${user.role})! முகப்புக்கு அழைத்துச் செல்கிறோம்...`
+            : `Account approved as ${user.role.replace(/_/g, ' ')}! Redirecting to dashboard...`
+        );
+        setTimeout(() => {
+          if (user.role === 'WARD_COUNCILLOR') navigate('/councillor', { replace: true });
+          else if (user.role === 'ADMIN') navigate('/admin', { replace: true });
+          else if (user.role === 'DEPARTMENT_HANDLER') navigate('/councillor/assignments', { replace: true });
+          else if (user.role === 'ACCOUNTABILITY_REVIEWER') navigate('/reviewer', { replace: true });
+          else navigate('/dashboard', { replace: true });
+        }, 1200);
+      } else {
+        setNotice(
+          isTamil
+            ? 'சரிபார்ப்பு இன்னும் நிலுவையில் உள்ளது. முதன்மை நிர்வாகி விரைவில் சரிபார்ப்பார்.'
+            : 'Verification is currently pending. The System Administrator will review your account shortly.'
+        );
+      }
     } finally {
       setIsChecking(false);
     }

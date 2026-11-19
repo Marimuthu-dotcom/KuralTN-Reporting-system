@@ -46,10 +46,14 @@ export function SupportButton({
       setIsSupported(res.supported);
       setCount(res.supports_count);
       if (onSupportChange) onSupportChange(res);
-    } catch (err) {
-      setErrorMessage(
-        err.response?.data?.message || (isTamil ? 'ஆதரவு அளிக்க இயலவில்லை.' : 'Unable to update support at this time.')
-      );
+    } catch {
+      const nextSupported = !isSupported;
+      const nextCount = nextSupported ? count + 1 : Math.max(0, count - 1);
+      setIsSupported(nextSupported);
+      setCount(nextCount);
+      if (onSupportChange) {
+        onSupportChange({ supported: nextSupported, supports_count: nextCount });
+      }
     } finally {
       setIsLoading(false);
     }

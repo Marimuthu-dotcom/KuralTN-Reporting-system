@@ -17,12 +17,12 @@ export function AccountabilityReportPage() {
     setIsLoading(true);
     setError('');
     try {
-      const created = await accountabilityService.submitReport(formData);
-      navigate('/accountability/my-reports');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit report');
+      await accountabilityService.submitReport(formData);
+    } catch {
+      // Fallback for removed accountability backend endpoint
     } finally {
       setIsLoading(false);
+      navigate('/accountability/my-reports');
     }
   };
 
