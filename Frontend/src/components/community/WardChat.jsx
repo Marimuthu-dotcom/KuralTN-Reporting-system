@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { MessageList } from './MessageList';
 import { MessageInput } from './MessageInput';
-import { communityService } from '../../services/communityService';
 import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../hooks/useLanguage';
 import { Lock } from 'lucide-react';
@@ -57,66 +56,27 @@ export function WardChat({ wardId, wardName }) {
   );
 
   useEffect(() => {
-    let isMounted = true;
-    async function loadChat() {
-      if (!isEligible) {
-        setIsLoading(false);
-        return;
-      }
-      try {
-        const data = await communityService.getMessages(wardId);
-        if (isMounted) {
-          setMessages(data?.length ? data : LOCAL_WARD_MESSAGES);
-          setRestrictionReason(null);
-        }
-      } catch (err) {
-        if (err.response?.status === 403) {
-          if (isMounted) {
-            setRestrictionReason(
-              err.response?.data?.message ||
-              (isTamil
-                ? 'உங்கள் குடியிருப்பு சரிபார்க்கப்படும் வரை வார்டு உரையாடல் கட்டுப்படுத்தப்பட்டுள்ளது.'
-                : 'Private ward community messages are restricted to verified residents whose address has been approved.')
-            );
-          }
-        } else if (isMounted) {
-          setMessages(LOCAL_WARD_MESSAGES);
-          setRestrictionReason(null);
-        }
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
+    if (!isEligible) {
+      setIsLoading(false);
+      return;
     }
+    setMessages(LOCAL_WARD_MESSAGES);
+    setRestrictionReason(null);
+    setIsLoading(false);
+  }, [wardId, isEligible]);
 
-    loadChat();
-
-    return () => {
-      isMounted = false;
+  const handleSendMessage = (payload) => {
+    const localMsg = {
+      id: `msg-${Date.now()}`,
+      ward_id: wardId,
+      sender_user_id: user?.id || 'user-citizen-anand',
+      sender_name: user?.full_name || user?.name || 'Resident',
+      sender_role: user?.role || 'CITIZEN',
+      message_text: payload.message_text,
+      complaint_ref_link: payload.complaint_ref_link || null,
+      created_at: new Date().toISOString(),
     };
-  }, [wardId, isEligible, isTamil]);
-
-  const handleSendMessage = async (payload) => {
-    try {
-      const newMsg = await communityService.sendMessage(wardId, {
-        ...payload,
-        sender_user_id: user?.id,
-        sender_name: user?.full_name || user?.name,
-        sender_role: user?.role,
-      });
-      setMessages((prev) => [...prev, newMsg]);
-    } catch {
-      const localMsg = {
-        id: `msg-${Date.now()}`,
-        ward_id: wardId,
-        sender_user_id: user?.id || 'user-citizen-anand',
-        sender_name: user?.full_name || user?.name || 'Resident',
-        sender_role: user?.role || 'CITIZEN',
-        message_text: payload.message_text,
-        complaint_ref_link: payload.complaint_ref_link || null,
-        created_at: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, localMsg]);
-    }
+    setMessages((prev) => [...prev, localMsg]);
   };
 
   if (!isEligible || restrictionReason) {

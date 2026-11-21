@@ -4,21 +4,25 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { defineConfig } from 'vite';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [
+      react(),
+      tailwindcss()
+    ],
+
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
-        '@backend': path.resolve(__dirname, '../Backend'),
-      },
+        '@backend': path.resolve(__dirname, '../Backend')
+      }
     },
+
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
-    },
+      watch: process.env.DISABLE_HMR === 'true' ? null : {}
+    }
   };
 });

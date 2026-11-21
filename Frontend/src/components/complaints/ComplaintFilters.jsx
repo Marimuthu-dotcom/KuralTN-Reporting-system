@@ -3,7 +3,6 @@ import { Filter, X } from 'lucide-react';
 import { Select } from '../common/Select';
 import { useWard } from '../../hooks/useWard';
 import { useLanguage } from '../../hooks/useLanguage';
-import { departmentService } from '../../services/departmentService';
 
 const LOCAL_DEPARTMENTS = [
   { id: 'dept-pw', name: 'Highways & Roads Engineering', name_ta: 'நெடுஞ்சாலை மற்றும் சாலைப் பொறியியல்' },
@@ -22,14 +21,6 @@ export function ComplaintFilters({
   const { districts, wards, categories } = useWard();
   const { t, getCategoryTitle, getStatusLabel, isTamil } = useLanguage();
   const [departments, setDepartments] = useState(LOCAL_DEPARTMENTS);
-
-  useEffect(() => {
-    departmentService.getDepartments()
-      .then((data) => {
-        if (data?.length) setDepartments(data);
-      })
-      .catch(() => {});
-  }, []);
 
   const statusOptions = [
     { value: '', label: t('allStatuses') },
