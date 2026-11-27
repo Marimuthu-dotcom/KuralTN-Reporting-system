@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Building, MapPin, ArrowRight } from 'lucide-react';
-import { districtService } from '../../services/districtService';
-import { wardService } from '../../services/wardService';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 
@@ -27,22 +25,10 @@ export function DistrictPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const d = await districtService.getDistrictById(id);
-        const allWards = await wardService.getAllWards();
-        setDistrict(d || LOCAL_DISTRICT_FALLBACK);
-        const matched = allWards.filter((w) => w.district_id === id);
-        setWards(matched.length ? matched : LOCAL_DISTRICT_WARDS);
-      } catch {
-        setDistrict({ ...LOCAL_DISTRICT_FALLBACK, id });
-        setWards(LOCAL_DISTRICT_WARDS);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
+    setIsLoading(true);
+    setDistrict({ ...LOCAL_DISTRICT_FALLBACK, id });
+    setWards(LOCAL_DISTRICT_WARDS);
+    setIsLoading(false);
   }, [id]);
 
   if (isLoading) return <div className="py-20 flex justify-center"><LoadingSpinner size="lg" /></div>;

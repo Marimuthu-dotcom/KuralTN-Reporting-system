@@ -1,6 +1,5 @@
 // Frontend/src/pages/admin/AuditLogsPage.jsx
-import React, { useState, useEffect } from 'react';
-import { adminService } from '../../services/adminService';
+import React, { useState } from 'react';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { formatDateTime } from '../../utils/dateUtils';
 import { Lock, Shield } from 'lucide-react';
@@ -37,19 +36,7 @@ const LOCAL_AUDIT_LOGS = [
 ];
 
 export function AuditLogsPage() {
-  const [logs, setLogs] = useState([]);
-
-  useEffect(() => {
-    async function loadLogs() {
-      try {
-        const data = await adminService.getAuditLogs();
-        setLogs(data?.length ? data : LOCAL_AUDIT_LOGS);
-      } catch {
-        setLogs(LOCAL_AUDIT_LOGS);
-      }
-    }
-    loadLogs();
-  }, []);
+  const [logs] = useState(LOCAL_AUDIT_LOGS);
 
   return (
     <div className="space-y-6">

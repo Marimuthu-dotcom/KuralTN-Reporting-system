@@ -1,6 +1,5 @@
 // Frontend/src/pages/reviewer/AssignedCasesPage.jsx
-import React, { useState, useEffect } from 'react';
-import { accountabilityService } from '../../services/accountabilityService';
+import React, { useState } from 'react';
 import { ConfidentialCaseCard } from '../../components/accountability/ConfidentialCaseCard';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
@@ -39,23 +38,8 @@ const LOCAL_REVIEWER_CASES = [
 ];
 
 export function AssignedCasesPage() {
-  const [cases, setCases] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadCases() {
-      setIsLoading(true);
-      try {
-        const data = await accountabilityService.getAssignedCases();
-        setCases(data?.length ? data : LOCAL_REVIEWER_CASES);
-      } catch {
-        setCases(LOCAL_REVIEWER_CASES);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadCases();
-  }, []);
+  const [cases] = useState(LOCAL_REVIEWER_CASES);
+  const [isLoading] = useState(false);
 
   return (
     <div className="space-y-6">

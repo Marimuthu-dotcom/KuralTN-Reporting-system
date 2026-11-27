@@ -4,8 +4,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useWard } from '../../hooks/useWard';
 import { useLanguage } from '../../hooks/useLanguage';
-import { userService } from '../../services/userService';
-import api from '../../services/api';
 import { Button } from '../../components/common/Button';
 import { LanguageToggle } from '../../components/common/LanguageToggle';
 import {
@@ -38,91 +36,55 @@ export function VerificationPendingPage() {
   const assignedWard = wards.find((w) => w.id === (user?.claimed_ward_id || user?.ward_id));
   const isRejected = user?.ward_verification_status === 'REJECTED';
 
-  const handleCheckStatus = async () => {
+  const handleCheckStatus = () => {
     setIsChecking(true);
     setNotice('');
     setErrorNotice('');
-    try {
-      const profile = await userService.getProfile();
-      updateUser(profile);
-      if (profile.is_ward_verified || profile.ward_verification_status === 'VERIFIED') {
-        setNotice(
-          isTamil
-            ? 'உங்கள் வார்டு குடியிருப்பு சரிபார்க்கப்பட்டது! தளத்திற்கு அழைத்துச் செல்கிறோம்...'
-            : 'Your ward residency has been verified! Redirecting to dashboard...'
-        );
-        setTimeout(() => {
-          navigate('/dashboard', { replace: true });
-        }, 1200);
-      } else {
-        setNotice(
-          isTamil
-            ? 'சரிபார்ப்பு இன்னும் நிலுவையில் உள்ளது. நகராட்சி நிர்வாகம் பரிசீலித்து வருகிறது.'
-            : 'Verification is still in progress. The ward administration is reviewing your details.'
-        );
-      }
-    } catch {
-      if (user?.is_ward_verified || user?.ward_verification_status === 'VERIFIED') {
-        setNotice(
-          isTamil
-            ? 'உங்கள் வார்டு குடியிருப்பு சரிபார்க்கப்பட்டது! தளத்திற்கு அழைத்துச் செல்கிறோம்...'
-            : 'Your ward residency has been verified! Redirecting to dashboard...'
-        );
-        setTimeout(() => {
-          navigate('/dashboard', { replace: true });
-        }, 1200);
-      } else {
-        setNotice(
-          isTamil
-            ? 'சரிபார்ப்பு இன்னும் நிலுவையில் உள்ளது. நகராட்சி நிர்வாகம் பரிசீலித்து வருகிறது.'
-            : 'Verification is still in progress. The ward administration is reviewing your details.'
-        );
-      }
-    } finally {
-      setIsChecking(false);
+
+    if (user?.is_ward_verified || user?.ward_verification_status === 'VERIFIED') {
+      setNotice(
+        isTamil
+          ? 'உங்கள் வார்டு குடியிருப்பு சரிபார்க்கப்பட்டது! தளத்திற்கு அழைத்துச் செல்கிறோம்...'
+          : 'Your ward residency has been verified! Redirecting to dashboard...'
+      );
+      setTimeout(() => {
+        navigate('/dashboard', { replace: true });
+      }, 1200);
+    } else {
+      setNotice(
+        isTamil
+          ? 'சரிபார்ப்பு இன்னும் நிலுவையில் உள்ளது. நகராட்சி நிர்வாகம் பரிசீலித்து வருகிறது.'
+          : 'Verification is still in progress. The ward administration is reviewing your details.'
+      );
     }
+
+    setIsChecking(false);
   };
 
-  const handleSimulateApproval = async () => {
+  const handleSimulateApproval = () => {
     if (!user?.id) return;
     setIsSimulating(true);
     setNotice('');
     setErrorNotice('');
-    try {
-      await api.post(`/admin/users/${user.id}/verify-ward`, {
-        status: 'APPROVED',
-        reason: 'Authorized simulated municipal resident verification',
-      });
-      const profile = await userService.getProfile();
-      updateUser(profile);
-      setNotice(
-        isTamil
-          ? 'நகராட்சி நிர்வாகம் உங்கள் வார்டு குடியிருப்பை அதிகாரப்பூர்வமாக உறுதிப்படுத்தியது! குடிமக்கள் பக்கத்திற்கு செல்கிறது...'
-          : 'Residency officially approved by Municipal Administration! Redirecting to Citizen Dashboard...'
-      );
-      setTimeout(() => {
-        navigate('/dashboard', { replace: true });
-      }, 1200);
-    } catch {
-      updateUser({
-        ...user,
-        ward_id: user?.claimed_ward_id || user?.ward_id || 'ward-chn-114',
-        is_ward_verified: true,
-        ward_verification_status: 'VERIFIED',
-        registration_status: 'COMPLETED',
-        approval_status: 'APPROVED',
-      });
-      setNotice(
-        isTamil
-          ? 'நகராட்சி நிர்வாகம் உங்கள் வார்டு குடியிருப்பை அதிகாரப்பூர்வமாக உறுதிப்படுத்தியது! குடிமக்கள் பக்கத்திற்கு செல்கிறது...'
-          : 'Residency officially approved by Municipal Administration! Redirecting to Citizen Dashboard...'
-      );
-      setTimeout(() => {
-        navigate('/dashboard', { replace: true });
-      }, 1200);
-    } finally {
-      setIsSimulating(false);
-    }
+
+    updateUser({
+      ...user,
+      ward_id: user?.claimed_ward_id || user?.ward_id || 'ward-chn-114',
+      is_ward_verified: true,
+      ward_verification_status: 'VERIFIED',
+      registration_status: 'COMPLETED',
+      approval_status: 'APPROVED',
+    });
+    setNotice(
+      isTamil
+        ? 'நகராட்சி நிர்வாகம் உங்கள் வார்டு குடியிருப்பை அதிகாரப்பூர்வமாக உறுதிப்படுத்தியது! குடிமக்கள் பக்கத்திற்கு செல்கிறது...'
+        : 'Residency officially approved by Municipal Administration! Redirecting to Citizen Dashboard...'
+    );
+    setTimeout(() => {
+      navigate('/dashboard', { replace: true });
+    }, 1200);
+
+    setIsSimulating(false);
   };
 
   const handleSignOut = async () => {

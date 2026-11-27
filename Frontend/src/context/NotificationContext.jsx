@@ -1,6 +1,5 @@
 // Frontend/src/context/NotificationContext.jsx
 import React, { createContext, useState, useEffect, useCallback } from 'react';
-import { notificationService } from '../services/notificationService';
 import { useAuth } from '../hooks/useAuth';
 
 export const NotificationContext = createContext(null);
@@ -42,15 +41,8 @@ export function NotificationProvider({ children }) {
 
   const fetchNotifications = useCallback(async () => {
     if (!isAuthenticated) return;
-    try {
-      const data = await notificationService.getNotifications();
-      const list = data?.length ? data : LOCAL_NOTIFICATIONS;
-      setNotifications(list);
-      setUnreadCount(list.filter((n) => !n.is_read).length);
-    } catch {
-      setNotifications(LOCAL_NOTIFICATIONS);
-      setUnreadCount(LOCAL_NOTIFICATIONS.filter((n) => !n.is_read).length);
-    }
+    setNotifications(LOCAL_NOTIFICATIONS);
+    setUnreadCount(LOCAL_NOTIFICATIONS.filter((n) => !n.is_read).length);
   }, [isAuthenticated]);
 
   useEffect(() => {

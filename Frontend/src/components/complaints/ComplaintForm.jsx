@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Upload, X, MapPin, AlertCircle, Camera } from 'lucide-react';
 import { Input } from '../common/Input';
 import { Textarea } from '../common/Textarea';
@@ -6,7 +6,6 @@ import { Select } from '../common/Select';
 import { Button } from '../common/Button';
 import { useWard } from '../../hooks/useWard';
 import { useLanguage } from '../../hooks/useLanguage';
-import { departmentService } from '../../services/departmentService';
 import { AnimatedCamera, AnimatedPin, AnimatedShield } from '../common/AnimatedIcons';
 
 const LOCAL_DEPARTMENTS = [
@@ -20,15 +19,7 @@ const LOCAL_DEPARTMENTS = [
 export function ComplaintForm({ onSubmit, isLoading = false, defaultWardId }) {
   const { wards, categories } = useWard();
   const { t, getCategoryTitle, isTamil } = useLanguage();
-  const [departments, setDepartments] = useState(LOCAL_DEPARTMENTS);
-
-  useEffect(() => {
-    departmentService.getDepartments()
-      .then((data) => {
-        if (data?.length) setDepartments(data);
-      })
-      .catch(() => {});
-  }, []);
+  const [departments] = useState(LOCAL_DEPARTMENTS);
 
   const [formData, setFormData] = useState({
     title: '',

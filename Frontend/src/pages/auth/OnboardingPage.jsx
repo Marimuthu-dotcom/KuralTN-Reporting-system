@@ -1,7 +1,6 @@
 // Frontend/src/pages/auth/OnboardingPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { userService } from '../../services/userService';
 import { useAuth } from '../../hooks/useAuth';
 import { useWard } from '../../hooks/useWard';
 import { useLanguage } from '../../hooks/useLanguage';
@@ -62,7 +61,7 @@ export function OnboardingPage() {
     }
   }, [user]);
 
-  const handleSendOtp = async () => {
+  const handleSendOtp = () => {
     const cleanPhone = formData.phone.trim().replace(/\D/g, '');
     if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
       setErrors((prev) => ({
@@ -78,27 +77,16 @@ export function OnboardingPage() {
     setIsSendingOtp(true);
     setOtpNotice('');
     setOtpError('');
-    try {
-      const res = await userService.sendPhoneOtp(cleanPhone);
-      setOtpSent(true);
-      setOtpNotice(
-        isTamil
-          ? `சரிபார்ப்பு குறியீடு அனுப்பப்பட்டது (சோதனை குறியீடு: ${res.demoOtp || '123456'})`
-          : `Verification OTP sent to ${cleanPhone} (Test Code: ${res.demoOtp || '123456'})`
-      );
-    } catch {
-      setOtpSent(true);
-      setOtpNotice(
-        isTamil
-          ? `சரிபார்ப்பு குறியீடு அனுப்பப்பட்டது (சோதனை குறியீடு: 123456)`
-          : `Verification OTP sent to ${cleanPhone} (Test Code: 123456)`
-      );
-    } finally {
-      setIsSendingOtp(false);
-    }
+    setOtpSent(true);
+    setOtpNotice(
+      isTamil
+        ? `சரிபார்ப்பு குறியீடு அனுப்பப்பட்டது (சோதனை குறியீடு: 123456)`
+        : `Verification OTP sent to ${cleanPhone} (Test Code: 123456)`
+    );
+    setIsSendingOtp(false);
   };
 
-  const handleVerifyOtp = async () => {
+  const handleVerifyOtp = () => {
     if (!otpCode.trim() || otpCode.trim().length < 4) {
       setOtpError(isTamil ? 'OTP குறியீட்டை உள்ளிடவும்' : 'Please enter the 6-digit OTP code');
       return;
@@ -106,23 +94,15 @@ export function OnboardingPage() {
 
     setIsVerifyingOtp(true);
     setOtpError('');
-    try {
-      await userService.verifyPhoneOtp({
-        phone: formData.phone.trim().replace(/\D/g, ''),
-        otp: otpCode.trim(),
-      });
+
+    if (otpCode.trim() === '123456') {
       setFormData((prev) => ({ ...prev, phone_verified: true }));
       setOtpNotice(isTamil ? 'கைபேசி எண் வெற்றிகரமாக சரிபார்க்கப்பட்டது!' : 'Mobile number verified successfully!');
-    } catch {
-      if (otpCode.trim() === '123456') {
-        setFormData((prev) => ({ ...prev, phone_verified: true }));
-        setOtpNotice(isTamil ? 'கைபேசி எண் வெற்றிகரமாக சரிபார்க்கப்பட்டது!' : 'Mobile number verified successfully!');
-      } else {
-        setOtpError(isTamil ? 'தவறான OTP குறியீடு (123456 பயன்படுத்தவும்)' : 'Invalid OTP code (use 123456 for local test)');
-      }
-    } finally {
-      setIsVerifyingOtp(false);
+    } else {
+      setOtpError(isTamil ? 'தவறான OTP குறியீடு (123456 பயன்படுத்தவும்)' : 'Invalid OTP code (use 123456 for local test)');
     }
+
+    setIsVerifyingOtp(false);
   };
 
   const validateForm = () => {
@@ -164,48 +144,33 @@ export function OnboardingPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitError('');
 
     if (!validateForm()) return;
 
     setIsLoading(true);
-    try {
-      const updatedUser = await userService.completeOnboarding({
-        full_name: formData.full_name.trim(),
-        ward_id: formData.ward_id,
-        address_line: formData.address_line.trim(),
-        pincode: formData.pincode.trim(),
-        phone: formData.phone.trim().replace(/\D/g, ''),
-        phone_verified: formData.phone_verified,
-      });
 
-      updateUser(updatedUser);
+    const selectedWard = wards.find((w) => w.id === formData.ward_id);
+    updateUser({
+      ...(user || {}),
+      full_name: formData.full_name.trim(),
+      ward_id: formData.ward_id,
+      claimed_ward_id: formData.ward_id,
+      ward_name: selectedWard?.ward_name || user?.ward_name,
+      district_id: selectedWard?.district_id || user?.district_id,
+      district_name: selectedWard?.district_name || user?.district_name,
+      address_line: formData.address_line.trim(),
+      pincode: formData.pincode.trim(),
+      phone: formData.phone.trim().replace(/\D/g, ''),
+      phone_verified: formData.phone_verified,
+      ward_verification_status: 'PENDING',
+      registration_status: 'WARD_SELECTION_PENDING',
+    });
+    navigate('/verification-pending', { replace: true });
 
-      // Transition to verification pending page based on policy
-      navigate('/verification-pending', { replace: true });
-    } catch {
-      const selectedWard = wards.find((w) => w.id === formData.ward_id);
-      updateUser({
-        ...(user || {}),
-        full_name: formData.full_name.trim(),
-        ward_id: formData.ward_id,
-        claimed_ward_id: formData.ward_id,
-        ward_name: selectedWard?.ward_name || user?.ward_name,
-        district_id: selectedWard?.district_id || user?.district_id,
-        district_name: selectedWard?.district_name || user?.district_name,
-        address_line: formData.address_line.trim(),
-        pincode: formData.pincode.trim(),
-        phone: formData.phone.trim().replace(/\D/g, ''),
-        phone_verified: formData.phone_verified,
-        ward_verification_status: 'PENDING',
-        registration_status: 'WARD_SELECTION_PENDING',
-      });
-      navigate('/verification-pending', { replace: true });
-    } finally {
-      setIsLoading(false);
-    }
+    setIsLoading(false);
   };
 
   return (

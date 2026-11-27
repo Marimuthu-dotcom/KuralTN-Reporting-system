@@ -1,6 +1,5 @@
 // Frontend/src/pages/councillor/DepartmentAssignmentsPage.jsx
 import React, { useState, useEffect } from 'react';
-import { complaintService } from '../../services/complaintService';
 import { useAuth } from '../../hooks/useAuth';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Briefcase, Building, ArrowRight } from 'lucide-react';
@@ -48,21 +47,12 @@ const LOCAL_DEPT_COMPLAINTS = [
 export function DepartmentAssignmentsPage() {
   const { user } = useAuth();
   const { isTamil } = useLanguage();
-  const [complaints, setComplaints] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [complaints] = useState(LOCAL_DEPT_COMPLAINTS);
+  const [isLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('received'); // 'received' | 'pending_verification'
 
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const res = await complaintService.getComplaints({ ward_id: user?.ward_id, limit: 100 });
-      const items = res.data || [];
-      setComplaints(items.length > 0 ? items : LOCAL_DEPT_COMPLAINTS);
-    } catch {
-      setComplaints(LOCAL_DEPT_COMPLAINTS);
-    } finally {
-      setIsLoading(false);
-    }
+  const loadData = () => {
+    // No backend: local complaints list is already loaded
   };
 
   useEffect(() => {

@@ -1,8 +1,6 @@
 // Frontend/src/pages/citizen/MyEscalationsPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { escalationService } from '../../services/escalationService';
-import { complaintService } from '../../services/complaintService';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Badge } from '../../components/common/Badge';
 import { Button } from '../../components/common/Button';
@@ -38,7 +36,7 @@ export function MyEscalationsPage() {
 
   const [escalations, setEscalations] = useState(LOCAL_ESCALATIONS);
   const [showEscalateForm, setShowEscalateForm] = useState(Boolean(prefillComplaintId));
-  const [complaints, setComplaints] = useState(LOCAL_ESCALATION_COMPLAINTS);
+  const [complaints] = useState(LOCAL_ESCALATION_COMPLAINTS);
 
   const [formData, setFormData] = useState({
     complaint_id: prefillComplaintId || '',
@@ -51,59 +49,41 @@ export function MyEscalationsPage() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const loadData = async () => {
-    try {
-      const compRes = await complaintService.getComplaints({ limit: 50 });
-      if (compRes.data?.length) setComplaints(compRes.data);
-    } catch {
-      // Keep local complaints list when DB is unavailable
-    }
-    try {
-      const escList = await escalationService.getMyEscalations();
-      if (escList?.length) setEscalations(escList);
-    } catch {
-      // Keep local sample escalations
-    }
+  const loadData = () => {
+    // No backend: keep local escalations and complaints lists
+    setEscalations(LOCAL_ESCALATIONS);
   };
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const handleEscalateSubmit = async (e) => {
+  const handleEscalateSubmit = (e) => {
     e.preventDefault();
     if (!formData.complaint_id || !formData.detailed_reason.trim()) return;
 
     setIsLoading(true);
-    try {
-      await escalationService.escalateComplaint(formData.complaint_id, formData);
-      await loadData();
-    } catch {
-      const matchedComp = complaints.find((c) => c.id === formData.complaint_id);
-      const newEsc = {
-        id: `esc-${Date.now()}`,
-        escalation_reference: `ESC-2026-${String(Math.floor(1000 + Math.random() * 9000))}`,
-        complaint_id: formData.complaint_id,
-        complaint_reference_id: matchedComp?.reference_id || formData.complaint_id,
-        target_authority: formData.target_authority,
-        reason_category: formData.reason_category,
-        detailed_reason: formData.detailed_reason,
-        status: 'SUBMITTED',
-        created_at: new Date().toISOString(),
-      };
-      setEscalations((prev) => [newEsc, ...prev]);
-    } finally {
-      setShowEscalateForm(false);
-      setFormData({
-        complaint_id: '',
-        reason_category: 'OVERDUE_DEADLINE',
-        detailed_reason: '',
-        escalation_tier: 'TIER_2_MUNICIPAL_COMMISSIONER',
-        target_authority: 'Municipal Commissioner',
-        external_portal_ref: '',
-      });
-      setIsLoading(false);
-    }
+
+    const matchedComp = complaints.find((c) => c.id === formData.complaint_id);
+    const newEsc = {
+      id: `esc-${Date.now()}`,
+      escalation_reference: `ESC-2026-${String(Math.floor(1000 + Math.random() * 9000))}`,
+      complaint_id: formData.complaint_id,
+      complaint_reference_id: matchedComp?.reference_id || formData.complaint_id,
+      target_authority: formData.target_authority,
+      reason_category: formData.reason_category,
+      detailed_reason: formData.detailed_reason,
+      status: 'SUBMITTED',
+      created_at: new Date().toISOString(),
+    };
+    setEscalations((prev) => [newEsc, ...prev]);
+
+    setShowEscalateForm(false);
+    setFormData({
+      complaint_id: '',
+      reason_category: 'OVERDUE_DEADLINE',
+      detailed_reason: '',
+      escalation_tier: 'TIER_2_MUNICIPAL_COMMISSIONER',
+      target_authority: 'Municipal Commissioner',
+      external_portal_ref: '',
+    });
+    setIsLoading(false);
   };
 
   return (

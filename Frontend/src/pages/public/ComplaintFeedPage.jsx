@@ -1,7 +1,6 @@
 // Frontend/src/pages/public/ComplaintFeedPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { complaintService } from '../../services/complaintService';
 import { ComplaintList } from '../../components/complaints/ComplaintList';
 import { ComplaintFilters } from '../../components/complaints/ComplaintFilters';
 import { ComplaintSearch } from '../../components/complaints/ComplaintSearch';
@@ -162,37 +161,12 @@ export function ComplaintFeedPage() {
     return list;
   };
 
-  const fetchComplaints = async () => {
+  const fetchComplaints = () => {
     setIsLoading(true);
-    try {
-      const res = await complaintService.getComplaints({
-        search: debouncedSearch,
-        district_id: districtId,
-        ward_id: wardId,
-        category_id: categoryId,
-        department_id: departmentId,
-        status,
-        sortBy,
-        page,
-        limit: 10,
-      });
-
-      const rows = res.data || [];
-      if (rows.length > 0) {
-        setComplaints(rows);
-        setTotal(res.pagination?.total || rows.length);
-      } else {
-        const fallback = filterLocal();
-        setComplaints(fallback);
-        setTotal(fallback.length);
-      }
-    } catch {
-      const fallback = filterLocal();
-      setComplaints(fallback);
-      setTotal(fallback.length);
-    } finally {
-      setIsLoading(false);
-    }
+    const fallback = filterLocal();
+    setComplaints(fallback);
+    setTotal(fallback.length);
+    setIsLoading(false);
   };
 
   useEffect(() => {

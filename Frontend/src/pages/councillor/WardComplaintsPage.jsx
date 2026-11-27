@@ -1,7 +1,6 @@
 // Frontend/src/pages/councillor/WardComplaintsPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { complaintService } from '../../services/complaintService';
 import { ComplaintList } from '../../components/complaints/ComplaintList';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Select } from '../../components/common/Select';
@@ -47,40 +46,17 @@ const LOCAL_WARD_COMPLAINTS = [
 
 export function WardComplaintsPage() {
   const { user } = useAuth();
-  const [complaints, setComplaints] = useState([]);
+  const [complaints, setComplaints] = useState(LOCAL_WARD_COMPLAINTS);
   const [filterStatus, setFilterStatus] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading] = useState(false);
 
   useEffect(() => {
-    async function loadWardComplaints() {
-      setIsLoading(true);
-      try {
-        const res = await complaintService.getComplaints({
-          ward_id: user?.ward_id,
-          status: filterStatus || undefined,
-          limit: 100,
-        });
-        const items = res.data || [];
-        if (items.length > 0) {
-          setComplaints(items);
-        } else {
-          setComplaints(
-            filterStatus
-              ? LOCAL_WARD_COMPLAINTS.filter((c) => c.status === filterStatus)
-              : LOCAL_WARD_COMPLAINTS
-          );
-        }
-      } catch {
-        setComplaints(
-          filterStatus
-            ? LOCAL_WARD_COMPLAINTS.filter((c) => c.status === filterStatus)
-            : LOCAL_WARD_COMPLAINTS
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadWardComplaints();
+    // No backend: apply the status filter locally
+    setComplaints(
+      filterStatus
+        ? LOCAL_WARD_COMPLAINTS.filter((c) => c.status === filterStatus)
+        : LOCAL_WARD_COMPLAINTS
+    );
   }, [user, filterStatus]);
 
   return (

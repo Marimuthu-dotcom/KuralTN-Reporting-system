@@ -12,7 +12,6 @@ import {
   UserCheck,
   FileText,
 } from 'lucide-react';
-import { complaintService } from '../../services/complaintService';
 import { useLanguage } from '../../hooks/useLanguage';
 
 const LOCAL_SAMPLE_COMPLAINTS = [
@@ -75,46 +74,28 @@ export function QuickTrackerWidget() {
   const { isTamil } = useLanguage();
   const navigate = useNavigate();
 
-  const handleTrack = async (e, directRef) => {
+  const handleTrack = (e, directRef) => {
     if (e) e.preventDefault();
     const query = (directRef || refInput).trim();
     if (!query) return;
 
-    setIsLoading(true);
     setError(null);
     setComplaint(null);
 
-    try {
-      let found = null;
-      try {
-        const res = await complaintService.getComplaints({ search: query, limit: 1 });
-        found =
-          res.data?.find(
-            (c) => c.reference_id?.toLowerCase() === query.toLowerCase() || c.id === query
-          ) || res.data?.[0];
-      } catch {
-        // Fallback to local sample complaints when DB is unavailable
-      }
+    const found = LOCAL_SAMPLE_COMPLAINTS.find(
+      (c) =>
+        c.reference_id.toLowerCase() === query.toLowerCase() ||
+        c.id.toLowerCase() === query.toLowerCase()
+    );
 
-      if (!found) {
-        found = LOCAL_SAMPLE_COMPLAINTS.find(
-          (c) =>
-            c.reference_id.toLowerCase() === query.toLowerCase() ||
-            c.id.toLowerCase() === query.toLowerCase()
-        );
-      }
-
-      if (!found) {
-        setError(
-          isTamil
-            ? `புகார் எண் '${query}' கிடைக்கவில்லை. சரியான எண்ணைச் சரிபார்க்கவும்.`
-            : `No grievance found with reference '${query}'. Please verify your ticket number.`
-        );
-      } else {
-        setComplaint(found);
-      }
-    } finally {
-      setIsLoading(false);
+    if (!found) {
+      setError(
+        isTamil
+          ? `புகார் எண் '${query}' கிடைக்கவில்லை. சரியான எண்ணைச் சரிபார்க்கவும்.`
+          : `No grievance found with reference '${query}'. Please verify your ticket number.`
+      );
+    } else {
+      setComplaint(found);
     }
   };
 

@@ -1,6 +1,5 @@
 // Frontend/src/pages/admin/OfficialContactsPage.jsx
-import React, { useState, useEffect } from 'react';
-import { adminService } from '../../services/adminService';
+import React, { useState } from 'react';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Input } from '../../components/common/Input';
 import { Textarea } from '../../components/common/Textarea';
@@ -36,7 +35,7 @@ const LOCAL_OFFICIAL_CONTACTS = [
 ];
 
 export function OfficialContactsPage() {
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useState(LOCAL_OFFICIAL_CONTACTS);
   const [showAdd, setShowAdd] = useState(false);
   const [formData, setFormData] = useState({
     portal_name: '',
@@ -46,44 +45,18 @@ export function OfficialContactsPage() {
     escalation_instructions: '',
   });
 
-  const loadContacts = async () => {
-    try {
-      const data = await adminService.getOfficialContacts();
-      setContacts(data?.length ? data : LOCAL_OFFICIAL_CONTACTS);
-    } catch {
-      setContacts(LOCAL_OFFICIAL_CONTACTS);
-    }
-  };
-
-  useEffect(() => {
-    loadContacts();
-  }, []);
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     const localContact = { id: `oc-local-${Date.now()}`, ...formData };
-    try {
-      await adminService.addOfficialContact(formData);
-      setContacts((prev) => [localContact, ...prev]);
-      setFormData({
-        portal_name: '',
-        authority_level: 'MUNICIPAL_CORPORATION',
-        helpline_number: '',
-        website_url: '',
-        escalation_instructions: '',
-      });
-      setShowAdd(false);
-    } catch {
-      setContacts((prev) => [localContact, ...prev]);
-      setFormData({
-        portal_name: '',
-        authority_level: 'MUNICIPAL_CORPORATION',
-        helpline_number: '',
-        website_url: '',
-        escalation_instructions: '',
-      });
-      setShowAdd(false);
-    }
+    setContacts((prev) => [localContact, ...prev]);
+    setFormData({
+      portal_name: '',
+      authority_level: 'MUNICIPAL_CORPORATION',
+      helpline_number: '',
+      website_url: '',
+      escalation_instructions: '',
+    });
+    setShowAdd(false);
   };
 
   return (

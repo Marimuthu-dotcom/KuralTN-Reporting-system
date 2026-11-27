@@ -1,6 +1,5 @@
 // Frontend/src/pages/citizen/MyComplaintsPage.jsx
-import React, { useState, useEffect } from 'react';
-import { complaintService } from '../../services/complaintService';
+import React, { useState } from 'react';
 import { ComplaintList } from '../../components/complaints/ComplaintList';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { useAuth } from '../../hooks/useAuth';
@@ -49,25 +48,8 @@ const LOCAL_MY_COMPLAINTS = [
 
 export function MyComplaintsPage() {
   const { user } = useAuth();
-  const [complaints, setComplaints] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadMyComplaints() {
-      setIsLoading(true);
-      try {
-        const res = await complaintService.getComplaints({ limit: 100 });
-        const all = res.data || [];
-        const mine = all.filter((c) => c.user_id === user?.id);
-        setComplaints(mine.length ? mine : LOCAL_MY_COMPLAINTS);
-      } catch {
-        setComplaints(LOCAL_MY_COMPLAINTS);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadMyComplaints();
-  }, [user]);
+  const [complaints] = useState(LOCAL_MY_COMPLAINTS);
+  const [isLoading] = useState(false);
 
   return (
     <div className="space-y-6">

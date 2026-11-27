@@ -1,5 +1,5 @@
 // Frontend/src/pages/public/OfficialEscalationDirectoryPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Phone,
   Calendar,
@@ -13,73 +13,61 @@ import { useWard } from '../../hooks/useWard';
 import { useLanguage } from '../../hooks/useLanguage';
 import { AnimatedShield } from '../../components/common/AnimatedIcons';
 
+const LOCAL_ESCALATION_CONTACTS = [
+  {
+    id: 'oec-01',
+    portal_name: 'Tamil Nadu Chief Minister Helpline (Mudalvarin Mugavari)',
+    authority_level: 'STATE_LEVEL',
+    department_name: 'Public Grievance Redressal Dept',
+    helpline_number: '1100 (Toll Free)',
+    website_url: 'https://cmhelpline.tnega.org',
+    escalation_instructions:
+      'Use CM Helpline if ward-level or municipal body issues remain unresolved beyond the designated citizen charter SLA or after formal appeal.',
+    last_verified_date: '2026-09-15',
+  },
+  {
+    id: 'oec-02',
+    portal_name: 'Thoothukudi City Corporation 24x7 Control Room',
+    authority_level: 'MUNICIPAL_CORPORATION',
+    district_name: 'Thoothukudi',
+    department_name: 'Corporation General Grievances',
+    helpline_number: '0461-2326901 / 1800-425-4244',
+    website_url: 'https://thoothukudicorporation.tn.gov.in',
+    escalation_instructions:
+      'Direct corporation grievance line for urgent civic failures, uncollected waste dumps, and water supply ruptures across Wards 1 to 60.',
+    last_verified_date: '2026-09-20',
+  },
+  {
+    id: 'oec-03',
+    portal_name: 'Tirunelveli Corporation Citizen WhatsApp Service',
+    authority_level: 'MUNICIPAL_CORPORATION',
+    district_name: 'Tirunelveli',
+    department_name: 'Municipal Administration',
+    helpline_number: '94437-01234',
+    website_url: 'https://tirunelvelicorporation.tn.gov.in',
+    escalation_instructions:
+      'Send photo, location coordinates, and description for automated token generation with the Commissioner office.',
+    last_verified_date: '2026-08-30',
+  },
+  {
+    id: 'oec-04',
+    portal_name: 'TANGEDCO (Electricity Board) Minnagam Central Control',
+    authority_level: 'DEPARTMENTAL_DIRECTORATE',
+    department_name: 'Tamil Nadu Generation and Distribution Corp',
+    helpline_number: '94987 94987',
+    website_url: 'https://www.tangedco.gov.in',
+    escalation_instructions:
+      'Report sparking transformers, sagging high-tension conductors, power outages, and broken utility poles 24x7.',
+    last_verified_date: '2026-10-01',
+  },
+];
+
 export function OfficialEscalationDirectoryPage() {
-  const [contacts, setContacts] = useState([]);
+  const [contacts] = useState(LOCAL_ESCALATION_CONTACTS);
   const [search, setSearch] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const { districts } = useWard();
   const { t, isTamil } = useLanguage();
-
-  useEffect(() => {
-    async function loadContacts() {
-      try {
-        const data = await import('../../services/adminService').then((m) =>
-          m.adminService.getOfficialContacts()
-        );
-        setContacts(data || []);
-      } catch {
-        setContacts([
-          {
-            id: 'oec-01',
-            portal_name: 'Tamil Nadu Chief Minister Helpline (Mudalvarin Mugavari)',
-            authority_level: 'STATE_LEVEL',
-            department_name: 'Public Grievance Redressal Dept',
-            helpline_number: '1100 (Toll Free)',
-            website_url: 'https://cmhelpline.tnega.org',
-            escalation_instructions:
-              'Use CM Helpline if ward-level or municipal body issues remain unresolved beyond the designated citizen charter SLA or after formal appeal.',
-            last_verified_date: '2026-09-15',
-          },
-          {
-            id: 'oec-02',
-            portal_name: 'Thoothukudi City Corporation 24x7 Control Room',
-            authority_level: 'MUNICIPAL_CORPORATION',
-            district_name: 'Thoothukudi',
-            department_name: 'Corporation General Grievances',
-            helpline_number: '0461-2326901 / 1800-425-4244',
-            website_url: 'https://thoothukudicorporation.tn.gov.in',
-            escalation_instructions:
-              'Direct corporation grievance line for urgent civic failures, uncollected waste dumps, and water supply ruptures across Wards 1 to 60.',
-            last_verified_date: '2026-09-20',
-          },
-          {
-            id: 'oec-03',
-            portal_name: 'Tirunelveli Corporation Citizen WhatsApp Service',
-            authority_level: 'MUNICIPAL_CORPORATION',
-            district_name: 'Tirunelveli',
-            department_name: 'Municipal Administration',
-            helpline_number: '94437-01234',
-            website_url: 'https://tirunelvelicorporation.tn.gov.in',
-            escalation_instructions:
-              'Send photo, location coordinates, and description for automated token generation with the Commissioner office.',
-            last_verified_date: '2026-08-30',
-          },
-          {
-            id: 'oec-04',
-            portal_name: 'TANGEDCO (Electricity Board) Minnagam Central Control',
-            authority_level: 'DEPARTMENTAL_DIRECTORATE',
-            department_name: 'Tamil Nadu Generation and Distribution Corp',
-            helpline_number: '94987 94987',
-            website_url: 'https://www.tangedco.gov.in',
-            escalation_instructions:
-              'Report sparking transformers, sagging high-tension conductors, power outages, and broken utility poles 24x7.',
-            last_verified_date: '2026-10-01',
-          },
-        ]);
-      }
-    }
-    loadContacts();
-  }, []);
 
   const filteredContacts = contacts.filter((c) => {
     const matchesSearch =

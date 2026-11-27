@@ -4,7 +4,6 @@ import { WardChat } from '../../components/community/WardChat';
 import { MemberList } from '../../components/community/MemberList';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { useAuth } from '../../hooks/useAuth';
-import { wardService } from '../../services/wardService';
 import { Users, Megaphone, Shield } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -23,26 +22,13 @@ const LOCAL_WARD_MEMBERS = [
 
 export function WardCommunityPage() {
   const { user } = useAuth();
-  const [members, setMembers] = useState(LOCAL_WARD_MEMBERS);
+  const [members] = useState(LOCAL_WARD_MEMBERS);
   const [wardInfo, setWardInfo] = useState(LOCAL_WARD_INFO);
 
   useEffect(() => {
-    async function loadWardData() {
-      if (user?.ward_id) {
-        try {
-          const [w, m] = await Promise.all([
-            wardService.getWardById(user.ward_id),
-            wardService.getWardMembers(user.ward_id),
-          ]);
-          if (w) setWardInfo(w);
-          if (m?.length) setMembers(m);
-        } catch {
-          setWardInfo({ ...LOCAL_WARD_INFO, ward_name: user?.ward_name || LOCAL_WARD_INFO.ward_name });
-          setMembers(LOCAL_WARD_MEMBERS);
-        }
-      }
+    if (user?.ward_id) {
+      setWardInfo({ ...LOCAL_WARD_INFO, ward_name: user?.ward_name || LOCAL_WARD_INFO.ward_name });
     }
-    loadWardData();
   }, [user]);
 
   if (!user?.ward_id) {

@@ -1,7 +1,6 @@
 // Frontend/src/pages/citizen/ProfilePage.jsx
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { userService } from '../../services/userService';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Avatar } from '../../components/common/Avatar';
 import { Input } from '../../components/common/Input';
@@ -21,20 +20,15 @@ export function ProfilePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  const handleUpdate = async (e) => {
+  const handleUpdate = (e) => {
     e.preventDefault();
     setIsLoading(true);
     setSuccessMsg('');
-    try {
-      const updated = await userService.updateProfile(formData);
-      updateUser(updated || formData);
-      setSuccessMsg('Profile updated successfully!');
-    } catch {
-      updateUser(formData);
-      setSuccessMsg('Profile updated successfully!');
-    } finally {
-      setIsLoading(false);
-    }
+
+    updateUser(formData);
+    setSuccessMsg('Profile updated successfully!');
+
+    setIsLoading(false);
   };
 
   return (

@@ -1,6 +1,5 @@
 // Frontend/src/pages/admin/DeadlineRulesPage.jsx
-import React, { useState, useEffect } from 'react';
-import { adminService } from '../../services/adminService';
+import React, { useState } from 'react';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Clock, Shield } from 'lucide-react';
 import { Badge } from '../../components/common/Badge';
@@ -13,19 +12,7 @@ const LOCAL_DEADLINE_RULES = [
 ];
 
 export function DeadlineRulesPage() {
-  const [rules, setRules] = useState([]);
-
-  useEffect(() => {
-    async function loadRules() {
-      try {
-        const data = await adminService.getDeadlineRules();
-        setRules(data?.length ? data : LOCAL_DEADLINE_RULES);
-      } catch {
-        setRules(LOCAL_DEADLINE_RULES);
-      }
-    }
-    loadRules();
-  }, []);
+  const [rules] = useState(LOCAL_DEADLINE_RULES);
 
   return (
     <div className="space-y-6">

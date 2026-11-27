@@ -20,9 +20,6 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../hooks/useLanguage';
 import { useWard } from '../../hooks/useWard';
-import { userService } from '../../services/userService';
-import { complaintService } from '../../services/complaintService';
-import { communityService } from '../../services/communityService';
 import { StatCard } from '../../components/dashboard/StatCard';
 import { DashboardHeader } from '../../components/dashboard/DashboardHeader';
 import { ActivityList } from '../../components/dashboard/ActivityList';
@@ -109,29 +106,13 @@ export function CitizenDashboardPage()
   const wardStatus = user?.ward_verification_status || (isWardVerified ? 'APPROVED' : 'NOT_SUBMITTED');
 
   useEffect(() => {
-    async function loadDashboard() {
-      setIsLoading(true);
-      try {
-        const [complaintsRes, annData] = await Promise.all([
-          complaintService.getComplaints({ limit: 100 }),
-          user?.ward_id && isWardVerified ? communityService.getAnnouncements(user.ward_id) : Promise.resolve([]),
-        ]);
-
-        const all = complaintsRes.data || [];
-        const userCreated = all.filter((c) => c.user_id === user?.id);
-        setMyComplaints(userCreated.length ? userCreated : LOCAL_CITIZEN_COMPLAINTS);
-        setAnnouncements(annData?.length ? annData : LOCAL_CITIZEN_ANNOUNCEMENTS);
-      } catch {
-        setMyComplaints(LOCAL_CITIZEN_COMPLAINTS);
-        setAnnouncements(LOCAL_CITIZEN_ANNOUNCEMENTS);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadDashboard();
+    setIsLoading(true);
+    setMyComplaints(LOCAL_CITIZEN_COMPLAINTS);
+    setAnnouncements(LOCAL_CITIZEN_ANNOUNCEMENTS);
+    setIsLoading(false);
   }, [user, isWardVerified]);
 
-  const handleSubmitWardRequest = async (e) => {
+  const handleSubmitWardRequest = (e) => {
     e.preventDefault();
     setWardFormError('');
     setWardFormSuccess('');
@@ -141,37 +122,26 @@ export function CitizenDashboardPage()
     }
 
     setIsSubmittingWard(true);
-    try {
-      await userService.submitWardMembershipRequest({
-        full_name: reqFullName.trim(),
-        phone: reqPhone.trim(),
-        residential_address: reqAddress.trim(),
-        district: reqDistrict,
-        ward_number: reqWardNumber.trim(),
-      });
-    } catch {
-      // Handle locally when legacy user ward-request endpoint is unavailable
-    } finally {
-      updateUser({
-        full_name: reqFullName.trim(),
-        phone: reqPhone.trim(),
-        address_line: reqAddress.trim(),
-        ward_verification_status: 'PENDING',
-        is_ward_verified: false,
-        claimed_ward_id: `ward_${reqWardNumber.trim()}`,
-        ward_id: `ward_${reqWardNumber.trim()}`,
-        ward_number: reqWardNumber.trim(),
-        district_id: reqDistrict,
-      });
 
-      setIsEditingRequest(false);
-      setWardFormSuccess(
-        isTamil
-          ? 'உங்கள் வார்டு உறுப்பினர் கோரிக்கை சமர்ப்பிக்கப்பட்டது! நிர்வாக ஒப்புதலுக்காக நிலுவையில் உள்ளது.'
-          : 'Your Ward Community Membership request has been submitted for administrator review.'
-      );
-      setIsSubmittingWard(false);
-    }
+    updateUser({
+      full_name: reqFullName.trim(),
+      phone: reqPhone.trim(),
+      address_line: reqAddress.trim(),
+      ward_verification_status: 'PENDING',
+      is_ward_verified: false,
+      claimed_ward_id: `ward_${reqWardNumber.trim()}`,
+      ward_id: `ward_${reqWardNumber.trim()}`,
+      ward_number: reqWardNumber.trim(),
+      district_id: reqDistrict,
+    });
+
+    setIsEditingRequest(false);
+    setWardFormSuccess(
+      isTamil
+        ? 'உங்கள் வார்டு உறுப்பினர் கோரிக்கை சமர்ப்பிக்கப்பட்டது! நிர்வாக ஒப்புதலுக்காக நிலுவையில் உள்ளது.'
+        : 'Your Ward Community Membership request has been submitted for administrator review.'
+    );
+    setIsSubmittingWard(false);
   };
 
   if (isLoading) {

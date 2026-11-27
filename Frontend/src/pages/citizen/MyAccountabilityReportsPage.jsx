@@ -1,7 +1,6 @@
 // Frontend/src/pages/citizen/MyAccountabilityReportsPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { accountabilityService } from '../../services/accountabilityService';
 import { ConfidentialCaseCard } from '../../components/accountability/ConfidentialCaseCard';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Button } from '../../components/common/Button';
@@ -30,23 +29,7 @@ const LOCAL_ACCOUNTABILITY_REPORTS = [
 ];
 
 export function MyAccountabilityReportsPage() {
-  const [reports, setReports] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadReports() {
-      setIsLoading(true);
-      try {
-        const data = await accountabilityService.getMyReports();
-        setReports(data?.length ? data : LOCAL_ACCOUNTABILITY_REPORTS);
-      } catch {
-        setReports(LOCAL_ACCOUNTABILITY_REPORTS);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadReports();
-  }, []);
+  const [reports] = useState(LOCAL_ACCOUNTABILITY_REPORTS);
 
   return (
     <div className="space-y-6">

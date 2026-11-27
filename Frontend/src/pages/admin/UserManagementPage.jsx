@@ -1,7 +1,5 @@
 // Frontend/src/pages/admin/UserManagementPage.jsx
 import React, { useState, useEffect } from 'react';
-import { adminService } from '../../services/adminService';
-import { departmentService } from '../../services/departmentService';
 import { useWard } from '../../hooks/useWard';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Avatar } from '../../components/common/Avatar';
@@ -111,11 +109,11 @@ const LOCAL_USERS = [
 ];
 
 export function UserManagementPage() {
-  const [users, setUsers] = useState([]);
-  const [approvalRequests, setApprovalRequests] = useState([]);
-  const [wardRequests, setWardRequests] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState(LOCAL_USERS);
+  const [approvalRequests, setApprovalRequests] = useState(LOCAL_APPROVAL_REQUESTS);
+  const [wardRequests, setWardRequests] = useState(LOCAL_WARD_REQUESTS);
+  const [departments] = useState(LOCAL_DEPARTMENTS);
+  const [isLoading] = useState(false);
   const [loadError, setLoadError] = useState(null);
   const [activeTab, setActiveTab] = useState('ward_requests'); // 'ward_requests' | 'approvals' | 'users'
 
@@ -140,63 +138,26 @@ export function UserManagementPage() {
   const [actionLoadingId, setActionLoadingId] = useState(null);
   const { wards } = useWard();
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = () => {
     setLoadError(null);
-    try {
-      const [usersData, reqData, wardReqData, deptsData] = await Promise.all([
-        adminService.getUsers(),
-        adminService.getApprovalRequests(),
-        adminService.getWardRequests().catch(() => LOCAL_WARD_REQUESTS),
-        departmentService.getDepartments().catch(() => LOCAL_DEPARTMENTS),
-      ]);
-      setUsers(usersData?.length ? usersData : LOCAL_USERS);
-      setApprovalRequests(reqData?.length ? reqData : LOCAL_APPROVAL_REQUESTS);
-      setWardRequests(wardReqData?.length ? wardReqData : LOCAL_WARD_REQUESTS);
-      setDepartments(deptsData?.length ? deptsData : LOCAL_DEPARTMENTS);
-    } catch {
-      setUsers(LOCAL_USERS);
-      setApprovalRequests(LOCAL_APPROVAL_REQUESTS);
-      setWardRequests(LOCAL_WARD_REQUESTS);
-      setDepartments(LOCAL_DEPARTMENTS);
-    } finally {
-      setIsLoading(false);
-    }
+    setUsers(LOCAL_USERS);
+    setApprovalRequests(LOCAL_APPROVAL_REQUESTS);
+    setWardRequests(LOCAL_WARD_REQUESTS);
   };
 
-  const handleApproveWardRequest = async (reqId) => {
-    setActionLoading(true);
-    try {
-      await adminService.approveWardRequest(reqId);
-      setWardRequests((prev) => prev.map((r) => (r.id === reqId ? { ...r, status: 'APPROVED' } : r)));
-    } catch {
-      setWardRequests((prev) => prev.map((r) => (r.id === reqId ? { ...r, status: 'APPROVED' } : r)));
-    } finally {
-      setActionLoading(false);
-    }
+  const handleApproveWardRequest = (reqId) => {
+    setWardRequests((prev) => prev.map((r) => (r.id === reqId ? { ...r, status: 'APPROVED' } : r)));
   };
 
-  const handleRejectWardRequest = async (e) => {
+  const handleRejectWardRequest = (e) => {
     e.preventDefault();
     if (!selectedWardRequest) return;
-    setActionLoading(true);
     const reason = wardRejectReason.trim() || 'Address does not correspond with the chosen electoral ward boundaries.';
-    try {
-      await adminService.rejectWardRequest(selectedWardRequest.id, { reason });
-      setWardRequests((prev) =>
-        prev.map((r) => (r.id === selectedWardRequest.id ? { ...r, status: 'REJECTED', rejection_reason: reason } : r))
-      );
-      setWardRejectModalOpen(false);
-      setSelectedWardRequest(null);
-    } catch {
-      setWardRequests((prev) =>
-        prev.map((r) => (r.id === selectedWardRequest.id ? { ...r, status: 'REJECTED', rejection_reason: reason } : r))
-      );
-      setWardRejectModalOpen(false);
-      setSelectedWardRequest(null);
-    } finally {
-      setActionLoading(false);
-    }
+    setWardRequests((prev) =>
+      prev.map((r) => (r.id === selectedWardRequest.id ? { ...r, status: 'REJECTED', rejection_reason: reason } : r))
+    );
+    setWardRejectModalOpen(false);
+    setSelectedWardRequest(null);
   };
 
   useEffect(() => {
@@ -218,7 +179,7 @@ export function UserManagementPage() {
     setRejectionModalOpen(true);
   };
 
-  const handleApproveSubmit = async (e) => {
+  const handleApproveSubmit = (e) => {
     e.preventDefault();
     if (!selectedRequest) return;
 
@@ -231,117 +192,54 @@ export function UserManagementPage() {
       return;
     }
 
-    setActionLoading(true);
-    const applyApprove = () => {
-      setApprovalRequests((prev) =>
-        prev.map((r) => (r.id === selectedRequest.id ? { ...r, status: 'APPROVED', reviewed_by_name: 'Admin' } : r))
-      );
-      setApprovalModalOpen(false);
-    };
-    try {
-      await adminService.approveRegistrationRequest(selectedRequest.id, {
-        role: assignRole,
-        ward_id: assignRole === 'WARD_COUNCILLOR' || assignRole === 'CITIZEN' ? assignWardId : null,
-        department_id: assignRole === 'DEPARTMENT_HANDLER' ? assignDepartmentId : null,
-        notes: approvalNotes,
-      });
-      applyApprove();
-    } catch {
-      applyApprove();
-    } finally {
-      setActionLoading(false);
-    }
+    setApprovalRequests((prev) =>
+      prev.map((r) => (r.id === selectedRequest.id ? { ...r, status: 'APPROVED', reviewed_by_name: 'Admin' } : r))
+    );
+    setApprovalModalOpen(false);
   };
 
-  const handleRejectSubmit = async (e) => {
+  const handleRejectSubmit = (e) => {
     e.preventDefault();
     if (!selectedRequest) return;
 
-    setActionLoading(true);
-    const applyReject = () => {
-      setApprovalRequests((prev) =>
-        prev.map((r) => (r.id === selectedRequest.id ? { ...r, status: 'REJECTED', reviewed_by_name: 'Admin' } : r))
-      );
-      setRejectionModalOpen(false);
-    };
-    try {
-      await adminService.rejectRegistrationRequest(selectedRequest.id, {
-        reason: rejectionReason.trim() || 'Application did not satisfy administrative identity verification.',
-      });
-      applyReject();
-    } catch {
-      applyReject();
-    } finally {
-      setActionLoading(false);
-    }
+    setApprovalRequests((prev) =>
+      prev.map((r) => (r.id === selectedRequest.id ? { ...r, status: 'REJECTED', reviewed_by_name: 'Admin' } : r))
+    );
+    setRejectionModalOpen(false);
   };
 
-  const handleToggleUserStatus = async (user) => {
+  const handleToggleUserStatus = (user) => {
     const isSuspending = user.is_active && user.approval_status !== 'SUSPENDED';
 
-    setActionLoadingId(user.id);
-    const applyToggle = () => {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === user.id
-            ? {
-                ...u,
-                is_active: !isSuspending,
-                approval_status: isSuspending ? 'SUSPENDED' : 'APPROVED',
-              }
-            : u
-        )
-      );
-    };
-    try {
-      await adminService.updateUserStatus(user.id, {
-        is_active: !isSuspending,
-        approval_status: isSuspending ? 'SUSPENDED' : 'APPROVED',
-        reason: isSuspending ? 'Suspended by system administrator' : 'Reactivated by system administrator',
-      });
-      applyToggle();
-    } catch {
-      applyToggle();
-    } finally {
-      setActionLoadingId(null);
-    }
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === user.id
+          ? {
+              ...u,
+              is_active: !isSuspending,
+              approval_status: isSuspending ? 'SUSPENDED' : 'APPROVED',
+            }
+          : u
+      )
+    );
   };
 
-  const handleRoleChange = async (userId, newRole) => {
-    try {
-      await adminService.updateUserRole(userId, { role: newRole });
-      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
-    } catch {
-      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
-    }
+  const handleRoleChange = (userId, newRole) => {
+    setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
   };
 
-  const handleVerifyWard = async (userId, status) => {
-    setActionLoadingId(userId);
-    const applyVerify = () => {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === userId
-            ? {
-                ...u,
-                is_ward_verified: status === 'APPROVED',
-                ward_verification_status: status === 'APPROVED' ? 'VERIFIED' : 'REJECTED',
-              }
-            : u
-        )
-      );
-    };
-    try {
-      await adminService.verifyUserWard(userId, {
-        status,
-        reason: status === 'APPROVED' ? 'Verified by Municipal Administration' : 'Address verification rejected',
-      });
-      applyVerify();
-    } catch {
-      applyVerify();
-    } finally {
-      setActionLoadingId(null);
-    }
+  const handleVerifyWard = (userId, status) => {
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === userId
+          ? {
+              ...u,
+              is_ward_verified: status === 'APPROVED',
+              ward_verification_status: status === 'APPROVED' ? 'VERIFIED' : 'REJECTED',
+            }
+          : u
+      )
+    );
   };
 
   const pendingApprovalsCount = approvalRequests.filter((r) => r.status === 'PENDING').length;

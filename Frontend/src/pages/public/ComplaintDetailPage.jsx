@@ -7,7 +7,6 @@ import {
   Shield,
   AlertTriangle,
 } from 'lucide-react';
-import { complaintService } from '../../services/complaintService';
 import { ComplaintStatusBadge } from '../../components/complaints/ComplaintStatusBadge';
 import { DeadlineIndicator } from '../../components/complaints/DeadlineIndicator';
 import { ComplaintImages } from '../../components/complaints/ComplaintImages';
@@ -153,113 +152,73 @@ export function ComplaintDetailPage() {
   const [proceedNotes, setProceedNotes] = useState('');
   const [isProceeding, setIsProceeding] = useState(false);
 
-  const fetchComplaintDetails = async () => {
+  const fetchComplaintDetails = () => {
     setIsLoading(true);
     setError(null);
-    try {
-      const data = await complaintService.getComplaintById(id);
-      setComplaint(data);
-      if (data.comments) setComments(data.comments);
-      else {
-        const comms = await import('../../services/commentService').then((m) =>
-          m.commentService.getComments(id)
-        );
-        setComments(comms || []);
-      }
-    } catch {
-      const localMatch =
-        LOCAL_COMPLAINT_RECORDS.find((c) => c.id === id || c.reference_id === id) ||
-        LOCAL_COMPLAINT_RECORDS[0];
-      setComplaint(localMatch);
-      setComments(localMatch.comments || []);
-    } finally {
-      setIsLoading(false);
-    }
+    const localMatch =
+      LOCAL_COMPLAINT_RECORDS.find((c) => c.id === id || c.reference_id === id) ||
+      LOCAL_COMPLAINT_RECORDS[0];
+    setComplaint(localMatch);
+    setComments(localMatch.comments || []);
+    setIsLoading(false);
   };
 
   useEffect(() => {
     fetchComplaintDetails();
   }, [id]);
 
-  const handleAddComment = async (text) => {
-    try {
-      const newComm = await import('../../services/commentService').then((m) =>
-        m.commentService.addComment(id, text)
-      );
-      setComments((prev) => [...prev, newComm]);
-    } catch {
-      setComments((prev) => [
-        ...prev,
-        {
-          id: `comm-${Date.now()}`,
-          author_name: user?.full_name || 'Citizen Member',
-          author_role: user?.role || 'CITIZEN',
-          comment_text: text,
-          created_at: new Date().toISOString(),
-        },
-      ]);
-    }
+  const handleAddComment = (text) => {
+    setComments((prev) => [
+      ...prev,
+      {
+        id: `comm-${Date.now()}`,
+        author_name: user?.full_name || 'Citizen Member',
+        author_role: user?.role || 'CITIZEN',
+        comment_text: text,
+        created_at: new Date().toISOString(),
+      },
+    ]);
   };
 
-  const handleConfirmResolution = async (feedback) => {
+  const handleConfirmResolution = (feedback) => {
     setIsActionLoading(true);
-    try {
-      await complaintService.confirmResolution(id, feedback);
-      setComplaint((prev) =>
-        prev ? { ...prev, status: 'Resolved', verification_state: 'CONFIRMED_RESOLVED' } : prev
-      );
-      showSuccess(isTamil ? 'தீர்வு வெற்றிகரமாக உறுதிசெய்யப்பட்டது!' : 'Resolution successfully confirmed!');
-    } catch (err) {
-      showError(err.response?.data?.message || (isTamil ? 'தீர்வு உறுதிப்படுத்த முடியவில்லை' : 'Failed to confirm resolution'));
-    } finally {
-      setIsActionLoading(false);
-    }
+    setComplaint((prev) =>
+      prev ? { ...prev, status: 'Resolved', verification_state: 'CONFIRMED_RESOLVED' } : prev
+    );
+    showSuccess(isTamil ? 'தீர்வு வெற்றிகரமாக உறுதிசெய்யப்பட்டது!' : 'Resolution successfully confirmed!');
+    setIsActionLoading(false);
   };
 
-  const handleDisputeResolution = async (reason) => {
+  const handleDisputeResolution = (reason) => {
     setIsActionLoading(true);
-    try {
-      await complaintService.disputeResolution(id, reason);
-      setComplaint((prev) =>
-        prev ? { ...prev, status: 'In Progress', verification_state: 'DISPUTED' } : prev
-      );
-      showSuccess(isTamil ? 'மறுப்பு சமர்ப்பிக்கப்பட்டது. தணிக்கை தொடங்கும்.' : 'Dispute recorded for administrative investigation.');
-    } catch (err) {
-      showError(err.response?.data?.message || (isTamil ? 'மறுப்பு சமர்ப்பிக்க முடியவில்லை' : 'Failed to dispute resolution'));
-    } finally {
-      setIsActionLoading(false);
-    }
+    setComplaint((prev) =>
+      prev ? { ...prev, status: 'In Progress', verification_state: 'DISPUTED' } : prev
+    );
+    showSuccess(isTamil ? 'மறுப்பு சமர்ப்பிக்கப்பட்டது. தணிக்கை தொடங்கும்.' : 'Dispute recorded for administrative investigation.');
+    setIsActionLoading(false);
   };
 
-  const handleCouncillorProceed = async (e) => {
+  const handleCouncillorProceed = (e) => {
     e.preventDefault();
     setIsProceeding(true);
-    try {
-      const notes =
-        proceedNotes.trim() ||
-        'Ward Councillor conducted on-ground verification and officially authorized transmission to department.';
-      await complaintService.councillorProceed(id, {
-        verification_notes: notes,
-      });
-      setComplaint((prev) =>
-        prev
-          ? {
-              ...prev,
-              councillor_verified: true,
-              councillor_verified_at: new Date().toISOString(),
-              councillor_notes: notes,
-              department_received: true,
-              status: 'Forwarded to Department',
-            }
-          : prev
-      );
-      setShowProceedModal(false);
-      showSuccess(isTamil ? 'வார்டு கவுன்சிலரால் சரிபார்க்கப்பட்டு துறைக்கு அனுப்பப்பட்டது!' : 'Grievance verified and forwarded to department!');
-    } catch (err) {
-      showError(err.response?.data?.message || 'Failed to verify and proceed');
-    } finally {
-      setIsProceeding(false);
-    }
+    const notes =
+      proceedNotes.trim() ||
+      'Ward Councillor conducted on-ground verification and officially authorized transmission to department.';
+    setComplaint((prev) =>
+      prev
+        ? {
+            ...prev,
+            councillor_verified: true,
+            councillor_verified_at: new Date().toISOString(),
+            councillor_notes: notes,
+            department_received: true,
+            status: 'Forwarded to Department',
+          }
+        : prev
+    );
+    setShowProceedModal(false);
+    showSuccess(isTamil ? 'வார்டு கவுன்சிலரால் சரிபார்க்கப்பட்டு துறைக்கு அனுப்பப்பட்டது!' : 'Grievance verified and forwarded to department!');
+    setIsProceeding(false);
   };
 
   if (isLoading) {

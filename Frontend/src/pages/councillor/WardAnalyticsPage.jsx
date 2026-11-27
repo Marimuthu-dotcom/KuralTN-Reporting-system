@@ -1,6 +1,5 @@
 // Frontend/src/pages/councillor/WardAnalyticsPage.jsx
-import React, { useState, useEffect } from 'react';
-import { complaintService } from '../../services/complaintService';
+import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { StatCard } from '../../components/dashboard/StatCard';
@@ -15,24 +14,8 @@ const LOCAL_ANALYTICS_COMPLAINTS = [
 
 export function WardAnalyticsPage() {
   const { user } = useAuth();
-  const [complaints, setComplaints] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const res = await complaintService.getComplaints({ ward_id: user?.ward_id, limit: 100 });
-        const items = res.data || [];
-        setComplaints(items.length > 0 ? items : LOCAL_ANALYTICS_COMPLAINTS);
-      } catch {
-        setComplaints(LOCAL_ANALYTICS_COMPLAINTS);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
-  }, [user]);
+  const [complaints] = useState(LOCAL_ANALYTICS_COMPLAINTS);
+  const [isLoading] = useState(false);
 
   const total = complaints.length;
   const resolved = complaints.filter((c) => ['Resolved', 'Closed'].includes(c.status)).length;

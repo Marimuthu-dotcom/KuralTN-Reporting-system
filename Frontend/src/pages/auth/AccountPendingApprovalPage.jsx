@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../hooks/useLanguage';
-import { userService } from '../../services/userService';
 import { Button } from '../../components/common/Button';
 import { LanguageToggle } from '../../components/common/LanguageToggle';
 import {
@@ -31,64 +30,40 @@ export function AccountPendingApprovalPage() {
   const [notice, setNotice] = useState('');
   const [errorNotice, setErrorNotice] = useState('');
 
-  const handleCheckStatus = async () => {
+  const handleCheckStatus = () => {
     setIsChecking(true);
     setNotice('');
     setErrorNotice('');
-    try {
-      const profile = await userService.getProfile();
-      updateUser(profile);
 
-      if (profile.approval_status === 'APPROVED' && profile.role !== 'PENDING') {
-        setNotice(
-          isTamil
-            ? `உங்கள் கணக்கு அங்கீகரிக்கப்பட்டது (${profile.role})! முகப்புக்கு அழைத்துச் செல்கிறோம்...`
-            : `Account approved as ${profile.role.replace(/_/g, ' ')}! Redirecting to dashboard...`
-        );
-        setTimeout(() => {
-          if (profile.role === 'WARD_COUNCILLOR') navigate('/councillor', { replace: true });
-          else if (profile.role === 'ADMIN') navigate('/admin', { replace: true });
-          else if (profile.role === 'DEPARTMENT_HANDLER') navigate('/councillor/assignments', { replace: true });
-          else if (profile.role === 'ACCOUNTABILITY_REVIEWER') navigate('/reviewer', { replace: true });
-          else navigate('/dashboard', { replace: true });
-        }, 1200);
-      } else if (profile.approval_status === 'REJECTED') {
-        setErrorNotice(
-          isTamil
-            ? 'உங்கள் கணக்கு விண்ணப்பம் நிர்வாகத்தால் நிராகரிக்கப்பட்டது.'
-            : 'Your account registration was declined by the system administrator.'
-        );
-      } else {
-        setNotice(
-          isTamil
-            ? 'சரிபார்ப்பு இன்னும் நிலுவையில் உள்ளது. முதன்மை நிர்வாகி விரைவில் சரிபார்ப்பார்.'
-            : 'Verification is currently pending. The System Administrator will review your account shortly.'
-        );
-      }
-    } catch {
-      if (user?.approval_status === 'APPROVED' && user?.role !== 'PENDING') {
-        setNotice(
-          isTamil
-            ? `உங்கள் கணக்கு அங்கீகரிக்கப்பட்டது (${user.role})! முகப்புக்கு அழைத்துச் செல்கிறோம்...`
-            : `Account approved as ${user.role.replace(/_/g, ' ')}! Redirecting to dashboard...`
-        );
-        setTimeout(() => {
-          if (user.role === 'WARD_COUNCILLOR') navigate('/councillor', { replace: true });
-          else if (user.role === 'ADMIN') navigate('/admin', { replace: true });
-          else if (user.role === 'DEPARTMENT_HANDLER') navigate('/councillor/assignments', { replace: true });
-          else if (user.role === 'ACCOUNTABILITY_REVIEWER') navigate('/reviewer', { replace: true });
-          else navigate('/dashboard', { replace: true });
-        }, 1200);
-      } else {
-        setNotice(
-          isTamil
-            ? 'சரிபார்ப்பு இன்னும் நிலுவையில் உள்ளது. முதன்மை நிர்வாகி விரைவில் சரிபார்ப்பார்.'
-            : 'Verification is currently pending. The System Administrator will review your account shortly.'
-        );
-      }
-    } finally {
-      setIsChecking(false);
+    // No backend: re-evaluate the locally-held user record
+    if (user?.approval_status === 'APPROVED' && user?.role !== 'PENDING') {
+      setNotice(
+        isTamil
+          ? `உங்கள் கணக்கு அங்கீகரிக்கப்பட்டது (${user.role})! முகப்புக்கு அழைத்துச் செல்கிறோம்...`
+          : `Account approved as ${user.role.replace(/_/g, ' ')}! Redirecting to dashboard...`
+      );
+      setTimeout(() => {
+        if (user.role === 'WARD_COUNCILLOR') navigate('/councillor', { replace: true });
+        else if (user.role === 'ADMIN') navigate('/admin', { replace: true });
+        else if (user.role === 'DEPARTMENT_HANDLER') navigate('/councillor/assignments', { replace: true });
+        else if (user.role === 'ACCOUNTABILITY_REVIEWER') navigate('/reviewer', { replace: true });
+        else navigate('/dashboard', { replace: true });
+      }, 1200);
+    } else if (user?.approval_status === 'REJECTED') {
+      setErrorNotice(
+        isTamil
+          ? 'உங்கள் கணக்கு விண்ணப்பம் நிர்வாகத்தால் நிராகரிக்கப்பட்டது.'
+          : 'Your account registration was declined by the system administrator.'
+      );
+    } else {
+      setNotice(
+        isTamil
+          ? 'சரிபார்ப்பு இன்னும் நிலுவையில் உள்ளது. முதன்மை நிர்வாகி விரைவில் சரிபார்ப்பார்.'
+          : 'Verification is currently pending. The System Administrator will review your account shortly.'
+      );
     }
+
+    setIsChecking(false);
   };
 
   const handleSignOut = async () => {

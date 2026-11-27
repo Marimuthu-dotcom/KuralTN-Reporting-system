@@ -1,7 +1,5 @@
 // Frontend/src/context/WardContext.jsx
 import React, { createContext, useState, useEffect } from 'react';
-import { wardService } from '../services/wardService';
-import { districtService } from '../services/districtService';
 
 export const WardContext = createContext(null);
 
@@ -67,32 +65,13 @@ export function WardProvider({ children }) {
   const [wards, setWards] = useState(LOCAL_WARDS);
   const [districts, setDistricts] = useState(LOCAL_DISTRICTS);
   const [categories, setCategories] = useState(LOCAL_CATEGORIES);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-    async function loadGeoData() {
-      try {
-        const [wardsData, districtsData, categoriesData] = await Promise.all([
-          wardService.getAllWards(),
-          districtService.getAllDistricts(),
-          wardService.getCategories(),
-        ]);
-        if (isMounted) {
-          if (wardsData?.length) setWards(wardsData);
-          if (districtsData?.length) setDistricts(districtsData);
-          if (categoriesData?.length) setCategories(categoriesData);
-        }
-      } catch {
-        // Keep local sample geographic data when database is unavailable
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    }
-    loadGeoData();
-    return () => {
-      isMounted = false;
-    };
+    setWards(LOCAL_WARDS);
+    setDistricts(LOCAL_DISTRICTS);
+    setCategories(LOCAL_CATEGORIES);
+    setIsLoading(false);
   }, []);
 
   const getWardById = (id) => wards.find((w) => w.id === id);

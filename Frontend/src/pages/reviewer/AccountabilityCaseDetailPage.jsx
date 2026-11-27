@@ -1,7 +1,6 @@
 // Frontend/src/pages/reviewer/AccountabilityCaseDetailPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { accountabilityService } from '../../services/accountabilityService';
 import { CaseHistory } from '../../components/accountability/CaseHistory';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Badge } from '../../components/common/Badge';
@@ -50,23 +49,17 @@ export function AccountabilityCaseDetailPage() {
   const [statusDecision, setStatusDecision] = useState('Finding Recorded');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fetchCase = async () => {
+  const fetchCase = () => {
     setIsLoading(true);
-    try {
-      const data = await accountabilityService.getCaseById(id);
-      setCaseData(data);
-    } catch {
-      setCaseData(buildLocalCase(id));
-    } finally {
-      setIsLoading(false);
-    }
+    setCaseData(buildLocalCase(id));
+    setIsLoading(false);
   };
 
   useEffect(() => {
     fetchCase();
   }, [id]);
 
-  const handleRecordFinding = async (e) => {
+  const handleRecordFinding = (e) => {
     e.preventDefault();
     if (!findingText.trim()) return;
 
@@ -79,27 +72,14 @@ export function AccountabilityCaseDetailPage() {
       referred_to_authority: referredAuthority.trim() || null,
       created_at: new Date().toISOString(),
     };
-    const applyLocalFinding = () => {
-      setCaseData((prev) => ({
-        ...prev,
-        status: statusDecision,
-        history: [localHistoryEntry, ...(prev?.history || [])],
-      }));
-      setFindingText('');
-      setReferredAuthority('');
-    };
-    try {
-      await accountabilityService.recordFinding(id, {
-        findings_or_notes: findingText.trim(),
-        referred_to_authority: referredAuthority.trim() || null,
-        status: statusDecision,
-      });
-      applyLocalFinding();
-    } catch {
-      applyLocalFinding();
-    } finally {
-      setIsSubmitting(false);
-    }
+    setCaseData((prev) => ({
+      ...prev,
+      status: statusDecision,
+      history: [localHistoryEntry, ...(prev?.history || [])],
+    }));
+    setFindingText('');
+    setReferredAuthority('');
+    setIsSubmitting(false);
   };
 
   if (isLoading) return <div className="py-20 flex justify-center"><LoadingSpinner size="lg" /></div>;

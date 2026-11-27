@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../hooks/useLanguage';
-import { supportService } from '../../services/supportService';
 import { AnimatedThumbsUp } from '../common/AnimatedIcons';
 
 export function SupportButton({
@@ -24,7 +23,7 @@ export function SupportButton({
   const isPrivilegedRole = user && (user.role === 'ADMIN' || user.role === 'WARD_COUNCILLOR');
   const canParticipate = isAuthenticated && (isSameWard || isPrivilegedRole);
 
-  const handleToggle = async (e) => {
+  const handleToggle = (e) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -38,24 +37,14 @@ export function SupportButton({
       return;
     }
 
-    setIsLoading(true);
     setErrorMessage('');
 
-    try {
-      const res = await supportService.toggleSupport(complaintId);
-      setIsSupported(res.supported);
-      setCount(res.supports_count);
-      if (onSupportChange) onSupportChange(res);
-    } catch {
-      const nextSupported = !isSupported;
-      const nextCount = nextSupported ? count + 1 : Math.max(0, count - 1);
-      setIsSupported(nextSupported);
-      setCount(nextCount);
-      if (onSupportChange) {
-        onSupportChange({ supported: nextSupported, supports_count: nextCount });
-      }
-    } finally {
-      setIsLoading(false);
+    const nextSupported = !isSupported;
+    const nextCount = nextSupported ? count + 1 : Math.max(0, count - 1);
+    setIsSupported(nextSupported);
+    setCount(nextCount);
+    if (onSupportChange) {
+      onSupportChange({ supported: nextSupported, supports_count: nextCount });
     }
   };
 

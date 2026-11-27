@@ -1,7 +1,5 @@
 // Frontend/src/pages/councillor/DeadlineManagementPage.jsx
 import React, { useState, useEffect } from 'react';
-import { complaintService } from '../../services/complaintService';
-import { deadlineService } from '../../services/deadlineService';
 import { useAuth } from '../../hooks/useAuth';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { DeadlineIndicator } from '../../components/complaints/DeadlineIndicator';
@@ -54,23 +52,11 @@ const LOCAL_DEADLINE_COMPLAINTS = [
 
 export function DeadlineManagementPage() {
   const { user } = useAuth();
-  const [complaints, setComplaints] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [complaints] = useState(LOCAL_DEADLINE_COMPLAINTS);
+  const [isLoading] = useState(false);
 
   useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const res = await complaintService.getComplaints({ ward_id: user?.ward_id, limit: 100 });
-        const items = res.data || [];
-        setComplaints(items.length > 0 ? items : LOCAL_DEADLINE_COMPLAINTS);
-      } catch {
-        setComplaints(LOCAL_DEADLINE_COMPLAINTS);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
+    // No backend: local complaints list is already loaded
   }, [user]);
 
   const overdueList = complaints.filter((c) => c.deadline_condition === 'OVERDUE');

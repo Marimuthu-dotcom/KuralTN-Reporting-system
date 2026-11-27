@@ -1,6 +1,5 @@
 // Frontend/src/pages/admin/CategoryManagementPage.jsx
-import React, { useState, useEffect } from 'react';
-import { adminService } from '../../services/adminService';
+import React, { useState } from 'react';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
@@ -16,24 +15,11 @@ const LOCAL_CATEGORIES = [
 ];
 
 export function CategoryManagementPage() {
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState(LOCAL_CATEGORIES);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newCat, setNewCat] = useState({ name: '', estimated_sla_days: 7, default_priority: 'MEDIUM' });
 
-  const loadCategories = async () => {
-    try {
-      const data = await adminService.getCategories();
-      setCategories(data?.length ? data : LOCAL_CATEGORIES);
-    } catch {
-      setCategories(LOCAL_CATEGORIES);
-    }
-  };
-
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const handleAddSubmit = async (e) => {
+  const handleAddSubmit = (e) => {
     e.preventDefault();
     if (!newCat.name) return;
     const localItem = {
@@ -43,16 +29,9 @@ export function CategoryManagementPage() {
       default_priority: newCat.default_priority || 'MEDIUM',
       description: 'Custom municipal grievance category',
     };
-    try {
-      await adminService.addCategory(newCat);
-      setCategories((prev) => [localItem, ...prev]);
-      setNewCat({ name: '', estimated_sla_days: 7, default_priority: 'MEDIUM' });
-      setShowAddForm(false);
-    } catch {
-      setCategories((prev) => [localItem, ...prev]);
-      setNewCat({ name: '', estimated_sla_days: 7, default_priority: 'MEDIUM' });
-      setShowAddForm(false);
-    }
+    setCategories((prev) => [localItem, ...prev]);
+    setNewCat({ name: '', estimated_sla_days: 7, default_priority: 'MEDIUM' });
+    setShowAddForm(false);
   };
 
   return (

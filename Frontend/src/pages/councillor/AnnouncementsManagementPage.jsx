@@ -1,6 +1,5 @@
 // Frontend/src/pages/councillor/AnnouncementsManagementPage.jsx
 import React, { useState, useEffect } from 'react';
-import { communityService } from '../../services/communityService';
 import { useAuth } from '../../hooks/useAuth';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Input } from '../../components/common/Input';
@@ -29,7 +28,7 @@ const LOCAL_WARD_ANNOUNCEMENTS = [
 
 export function AnnouncementsManagementPage() {
   const { user } = useAuth();
-  const [announcements, setAnnouncements] = useState([]);
+  const [announcements, setAnnouncements] = useState(LOCAL_WARD_ANNOUNCEMENTS);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -38,24 +37,16 @@ export function AnnouncementsManagementPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const loadAnnouncements = async () => {
-    if (user?.ward_id) {
-      try {
-        const data = await communityService.getAnnouncements(user.ward_id);
-        setAnnouncements(data?.length ? data : LOCAL_WARD_ANNOUNCEMENTS);
-      } catch {
-        setAnnouncements(LOCAL_WARD_ANNOUNCEMENTS);
-      }
-    } else {
-      setAnnouncements(LOCAL_WARD_ANNOUNCEMENTS);
-    }
+  const loadAnnouncements = () => {
+    // No backend: keep local announcements list
+    setAnnouncements(LOCAL_WARD_ANNOUNCEMENTS);
   };
 
   useEffect(() => {
     loadAnnouncements();
   }, [user]);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.title || !formData.content) return;
 
@@ -65,16 +56,9 @@ export function AnnouncementsManagementPage() {
       ...formData,
       created_at: new Date().toISOString(),
     };
-    try {
-      await communityService.createAnnouncement(user?.ward_id || 'ward-chn-114', formData);
-      setAnnouncements((prev) => [localNewAnnouncement, ...prev]);
-      setFormData({ title: '', content: '', priority: 'NORMAL', expires_at: '' });
-    } catch {
-      setAnnouncements((prev) => [localNewAnnouncement, ...prev]);
-      setFormData({ title: '', content: '', priority: 'NORMAL', expires_at: '' });
-    } finally {
-      setIsLoading(false);
-    }
+    setAnnouncements((prev) => [localNewAnnouncement, ...prev]);
+    setFormData({ title: '', content: '', priority: 'NORMAL', expires_at: '' });
+    setIsLoading(false);
   };
 
   return (

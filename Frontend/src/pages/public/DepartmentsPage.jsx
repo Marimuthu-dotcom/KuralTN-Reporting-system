@@ -1,5 +1,5 @@
 // Frontend/src/pages/public/DepartmentsPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Building2,
@@ -15,7 +15,6 @@ import {
   FileText,
   Activity,
 } from 'lucide-react';
-import { departmentService } from '../../services/departmentService';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { ErrorState } from '../../components/common/ErrorState';
@@ -95,28 +94,15 @@ const LOCAL_DEPARTMENTS = [
 ];
 
 export function DepartmentsPage() {
-  const [departments, setDepartments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [departments] = useState(LOCAL_DEPARTMENTS);
+  const [isLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const { t, isTamil } = useLanguage();
 
-  const fetchDepartments = async () => {
-    setIsLoading(true);
+  const fetchDepartments = () => {
     setError(null);
-    try {
-      const data = await departmentService.getDepartments();
-      setDepartments(data?.length ? data : LOCAL_DEPARTMENTS);
-    } catch {
-      setDepartments(LOCAL_DEPARTMENTS);
-    } finally {
-      setIsLoading(false);
-    }
   };
-
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
 
   const filteredDepartments = departments.filter((d) => {
     if (!searchQuery.trim()) return true;

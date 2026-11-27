@@ -2,7 +2,6 @@
 import React, { useState, useRef } from 'react';
 import { ComplaintForm } from '../../components/complaints/ComplaintForm';
 import { SubmissionProgressModal } from '../../components/complaints/SubmissionProgressModal';
-import { complaintService } from '../../services/complaintService';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../hooks/useLanguage';
@@ -47,43 +46,32 @@ export function CreateComplaintPage() {
       setSubmissionStage((curr) => (curr === 'processing' || curr === 'posting' ? 'verifying' : curr));
     }, 1100);
 
-    try {
-      // Real database creation API request
-      const created = await complaintService.createComplaint(formData);
+    // No backend: build a local complaint record and finish successfully
+    const created = {
+      id: `comp-${Date.now()}`,
+      reference_id: `CIV-2026-${Math.floor(10000 + Math.random() * 90000)}`,
+      title: formData.get('title') || '',
+      description: formData.get('description') || '',
+      category_id: formData.get('category_id') || '',
+      ward_id: formData.get('ward_id') || '',
+      address_text: formData.get('address_text') || '',
+      landmark: formData.get('landmark') || '',
+      priority: formData.get('priority') || 'MEDIUM',
+      latitude: formData.get('latitude') || '',
+      longitude: formData.get('longitude') || '',
+      status: 'Submitted',
+      client_submission_id: submissionId,
+      created_at: new Date().toISOString(),
+    };
 
-      // Ensure minimal duration so citizen perceives stages cleanly
-      await new Promise((resolve) => setTimeout(resolve, 1400));
+    // Ensure minimal duration so citizen perceives stages cleanly
+    await new Promise((resolve) => setTimeout(resolve, 1400));
 
-      clearTimeout(tProcessing);
-      clearTimeout(tVerifying);
+    clearTimeout(tProcessing);
+    clearTimeout(tVerifying);
 
-      setSubmittedComplaint(created);
-      setSubmissionStage('success');
-    } catch (err) {
-      clearTimeout(tProcessing);
-      clearTimeout(tVerifying);
-
-      // Distinguish network timeout / connection abort from deterministic backend error
-      const isTimeout =
-        err.code === 'ECONNABORTED' ||
-        err.message?.toLowerCase().includes('timeout') ||
-        err.message?.toLowerCase().includes('network error') ||
-        (!err.response && !err.status);
-
-      if (isTimeout) {
-        setSubmissionStage('unknown');
-        setSubmissionError(
-          'Network connection interrupted before receiving confirmation. Your complaint might already be stored.'
-        );
-      } else {
-        const message =
-          err.response?.data?.message ||
-          err.message ||
-          'Failed to record complaint in municipal database.';
-        setSubmissionError(message);
-        setSubmissionStage('failure');
-      }
-    }
+    setSubmittedComplaint(created);
+    setSubmissionStage('success');
   };
 
   const handleSubmit = (formData) => {
@@ -102,19 +90,9 @@ export function CreateComplaintPage() {
   const handleCheckStatus = async () => {
     if (!currentSubmissionIdRef.current) return;
     setIsCheckingStatus(true);
-    try {
-      const existing = await complaintService.checkSubmissionStatus(currentSubmissionIdRef.current);
-      if (existing) {
-        setSubmittedComplaint(existing);
-        setSubmissionStage('success');
-      } else {
-        alert('No committed record found in the database yet. You can safely retry submission.');
-      }
-    } catch (err) {
-      alert('Unable to confirm status at this moment. You can safely retry submission.');
-    } finally {
-      setIsCheckingStatus(false);
-    }
+    // No backend: nothing committed remotely to check
+    alert('No committed record found in the database yet. You can safely retry submission.');
+    setIsCheckingStatus(false);
   };
 
   const handleCloseModal = () => {

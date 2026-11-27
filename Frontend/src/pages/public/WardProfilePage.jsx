@@ -2,8 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Building, Users, Shield, MapPin, CheckCircle, Clock } from 'lucide-react';
-import { wardService } from '../../services/wardService';
-import { complaintService } from '../../services/complaintService';
 import { ComplaintCard } from '../../components/complaints/ComplaintCard';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
@@ -65,26 +63,11 @@ export function WardProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const [w, c, m] = await Promise.all([
-          wardService.getWardById(id),
-          complaintService.getComplaints({ ward_id: id, limit: 6 }),
-          wardService.getWardMembers(id),
-        ]);
-        setWard(w || LOCAL_WARD_FALLBACK);
-        setComplaints(c.data?.length ? c.data : LOCAL_WARD_COMPLAINTS);
-        setMembers(m || []);
-      } catch {
-        setWard({ ...LOCAL_WARD_FALLBACK, id });
-        setComplaints(LOCAL_WARD_COMPLAINTS);
-        setMembers([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
+    setIsLoading(true);
+    setWard({ ...LOCAL_WARD_FALLBACK, id });
+    setComplaints(LOCAL_WARD_COMPLAINTS);
+    setMembers([]);
+    setIsLoading(false);
   }, [id]);
 
   if (isLoading) return <div className="py-20 flex justify-center"><LoadingSpinner size="lg" /></div>;

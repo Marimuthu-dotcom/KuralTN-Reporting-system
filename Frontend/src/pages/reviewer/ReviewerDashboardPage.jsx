@@ -1,7 +1,6 @@
 // Frontend/src/pages/reviewer/ReviewerDashboardPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { accountabilityService } from '../../services/accountabilityService';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { StatCard } from '../../components/dashboard/StatCard';
 import { ConfidentialCaseCard } from '../../components/accountability/ConfidentialCaseCard';
@@ -42,24 +41,9 @@ const LOCAL_REVIEWER_CASES = [
 ];
 
 export function ReviewerDashboardPage() {
-  const [cases, setCases] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [cases] = useState(LOCAL_REVIEWER_CASES);
+  const [isLoading] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    async function loadCases() {
-      setIsLoading(true);
-      try {
-        const data = await accountabilityService.getAssignedCases();
-        setCases(data?.length ? data : LOCAL_REVIEWER_CASES);
-      } catch {
-        setCases(LOCAL_REVIEWER_CASES);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadCases();
-  }, []);
 
   if (isLoading) return <div className="py-20 flex justify-center"><LoadingSpinner size="lg" /></div>;
 

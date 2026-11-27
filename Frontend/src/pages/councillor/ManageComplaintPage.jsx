@@ -1,8 +1,6 @@
 // Frontend/src/pages/councillor/ManageComplaintPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { complaintService } from '../../services/complaintService';
-import { deadlineService } from '../../services/deadlineService';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Button } from '../../components/common/Button';
 import { Select } from '../../components/common/Select';
@@ -11,7 +9,6 @@ import { Textarea } from '../../components/common/Textarea';
 import { ProgressUpdateForm } from '../../components/complaints/ProgressUpdateForm';
 import { ResolutionEvidenceForm } from '../../components/complaints/ResolutionEvidenceForm';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
-import { departmentService } from '../../services/departmentService';
 import { formatDateTime } from '../../utils/dateUtils';
 
 const LOCAL_DEPARTMENTS = [
@@ -41,7 +38,7 @@ export function ManageComplaintPage() {
   const navigate = useNavigate();
 
   const [complaint, setComplaint] = useState(null);
-  const [departments, setDepartments] = useState([]);
+  const [departments] = useState(LOCAL_DEPARTMENTS);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('status'); // status, deadline, progress, resolve
 
@@ -58,133 +55,70 @@ export function ManageComplaintPage() {
   const [selectedPriority, setSelectedPriority] = useState('MEDIUM');
   const [proceedLoading, setProceedLoading] = useState(false);
 
-  const fetchComplaint = async () => {
+  const fetchComplaint = () => {
     setIsLoading(true);
-    try {
-      const data = await complaintService.getComplaintById(id);
-      setComplaint(data);
-      setNewStatus(data.status);
-      setSelectedDeptId(data.department_id || data.department?.id || '');
-      setSelectedPriority(data.priority || 'MEDIUM');
-      setVerificationNotes(
-        data.councillor_notes ||
-        `Inspected field conditions at ${data.address_text}. Genuine civic grievance confirmed on ground. Transmitting to municipal department for execution.`
-      );
-    } catch {
-      const fallback = buildLocalComplaint(id);
-      setComplaint(fallback);
-      setNewStatus(fallback.status);
-      setSelectedDeptId(fallback.department_id);
-      setSelectedPriority(fallback.priority);
-      setVerificationNotes(
-        `Inspected field conditions at ${fallback.address_text}. Genuine civic grievance confirmed on ground. Transmitting to municipal department for execution.`
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    const fallback = buildLocalComplaint(id);
+    setComplaint(fallback);
+    setNewStatus(fallback.status);
+    setSelectedDeptId(fallback.department_id);
+    setSelectedPriority(fallback.priority);
+    setVerificationNotes(
+      `Inspected field conditions at ${fallback.address_text}. Genuine civic grievance confirmed on ground. Transmitting to municipal department for execution.`
+    );
+    setIsLoading(false);
   };
 
   useEffect(() => {
     fetchComplaint();
-    departmentService.getDepartments()
-      .then((depts) => setDepartments(depts?.length ? depts : LOCAL_DEPARTMENTS))
-      .catch(() => setDepartments(LOCAL_DEPARTMENTS));
   }, [id]);
 
-  const handleCouncillorProceed = async (e) => {
+  const handleCouncillorProceed = (e) => {
     e.preventDefault();
     setProceedLoading(true);
     const dept = departments.find((d) => d.id === selectedDeptId);
-    const applyProceed = () => {
-      setComplaint((prev) => ({
-        ...prev,
-        councillor_verified: true,
-        councillor_verified_at: new Date().toISOString(),
-        councillor_notes: verificationNotes.trim(),
-        department_id: selectedDeptId || prev.department_id,
-        department_name: dept?.name || prev.department_name,
-        priority: selectedPriority,
-        status: 'Forwarded to Department',
-      }));
-      setNewStatus('Acknowledged');
-    };
-    try {
-      await complaintService.councillorProceed(id, {
-        verification_notes: verificationNotes.trim(),
-        department_id: selectedDeptId || undefined,
-        priority: selectedPriority,
-      });
-      applyProceed();
-    } catch {
-      applyProceed();
-    } finally {
-      setProceedLoading(false);
-    }
+    setComplaint((prev) => ({
+      ...prev,
+      councillor_verified: true,
+      councillor_verified_at: new Date().toISOString(),
+      councillor_notes: verificationNotes.trim(),
+      department_id: selectedDeptId || prev.department_id,
+      department_name: dept?.name || prev.department_name,
+      priority: selectedPriority,
+      status: 'Forwarded to Department',
+    }));
+    setNewStatus('Acknowledged');
+    setProceedLoading(false);
   };
 
-  const handleUpdateStatus = async (e) => {
+  const handleUpdateStatus = (e) => {
     e.preventDefault();
     if (!statusReason.trim()) return;
 
     setActionLoading(true);
-    try {
-      await complaintService.updateStatus(id, {
-        status: newStatus,
-        reason: statusReason.trim(),
-        update_source: 'COUNCILLOR',
-      });
-      setComplaint((prev) => ({ ...prev, status: newStatus }));
-      setStatusReason('');
-    } catch {
-      setComplaint((prev) => ({ ...prev, status: newStatus }));
-      setStatusReason('');
-    } finally {
-      setActionLoading(false);
-    }
+    setComplaint((prev) => ({ ...prev, status: newStatus }));
+    setStatusReason('');
+    setActionLoading(false);
   };
 
-  const handleSetDeadline = async (e) => {
+  const handleSetDeadline = (e) => {
     e.preventDefault();
     if (!targetDate || !supportingSource.trim()) return;
 
     setActionLoading(true);
-    try {
-      await deadlineService.proposeDeadline(id, {
-        target_date: targetDate,
-        deadline_type: deadlineType,
-        responsible_department: complaint.category_name,
-        supporting_source_text: supportingSource.trim(),
-      });
-      setSupportingSource('');
-    } catch {
-      setSupportingSource('');
-    } finally {
-      setActionLoading(false);
-    }
+    setSupportingSource('');
+    setActionLoading(false);
   };
 
-  const handleProgressSubmit = async (data) => {
+  const handleProgressSubmit = (data) => {
     setActionLoading(true);
-    try {
-      await complaintService.submitProgress(id, data);
-      setComplaint((prev) => ({ ...prev, status: 'In Progress' }));
-    } catch {
-      setComplaint((prev) => ({ ...prev, status: 'In Progress' }));
-    } finally {
-      setActionLoading(false);
-    }
+    setComplaint((prev) => ({ ...prev, status: 'In Progress' }));
+    setActionLoading(false);
   };
 
-  const handleResolveSubmit = async (data) => {
+  const handleResolveSubmit = (data) => {
     setActionLoading(true);
-    try {
-      await complaintService.proposeResolution(id, data);
-      setComplaint((prev) => ({ ...prev, status: 'Resolution Proposed' }));
-    } catch {
-      setComplaint((prev) => ({ ...prev, status: 'Resolution Proposed' }));
-    } finally {
-      setActionLoading(false);
-    }
+    setComplaint((prev) => ({ ...prev, status: 'Resolution Proposed' }));
+    setActionLoading(false);
   };
 
   if (isLoading) return <div className="py-20 flex justify-center"><LoadingSpinner size="lg" /></div>;

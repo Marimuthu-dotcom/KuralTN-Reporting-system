@@ -1,7 +1,5 @@
 // Frontend/src/pages/admin/InvitationManagementPage.jsx
 import React, { useState, useEffect } from 'react';
-import { adminService } from '../../services/adminService';
-import { departmentService } from '../../services/departmentService';
 import { useWard } from '../../hooks/useWard';
 import { useLanguage } from '../../hooks/useLanguage';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
@@ -65,9 +63,9 @@ export function InvitationManagementPage() {
   const { isTamil } = useLanguage();
   const { wards } = useWard();
 
-  const [invitations, setInvitations] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [invitations, setInvitations] = useState(LOCAL_INVITATIONS);
+  const [departments] = useState(LOCAL_DEPARTMENTS);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [copiedToken, setCopiedToken] = useState(null);
 
@@ -78,7 +76,7 @@ export function InvitationManagementPage() {
   const [email, setEmail] = useState('');
   const [district, setDistrict] = useState('Chennai');
   const [wardNumber, setWardNumber] = useState('114');
-  const [departmentId, setDepartmentId] = useState('');
+  const [departmentId, setDepartmentId] = useState(LOCAL_DEPARTMENTS[0].id);
   const [designation, setDesignation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
@@ -89,29 +87,9 @@ export function InvitationManagementPage() {
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = () => {
     setError(null);
-    try {
-      const [invData, deptData] = await Promise.all([
-        adminService.getInvitations(),
-        departmentService.getDepartments().catch(() => LOCAL_DEPARTMENTS),
-      ]);
-      const resolvedDepts = deptData?.length ? deptData : LOCAL_DEPARTMENTS;
-      setInvitations(invData?.length ? invData : LOCAL_INVITATIONS);
-      setDepartments(resolvedDepts);
-      if (resolvedDepts.length > 0 && !departmentId) {
-        setDepartmentId(resolvedDepts[0].id);
-      }
-    } catch {
-      setInvitations(LOCAL_INVITATIONS);
-      setDepartments(LOCAL_DEPARTMENTS);
-      if (!departmentId) {
-        setDepartmentId(LOCAL_DEPARTMENTS[0].id);
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    setInvitations(LOCAL_INVITATIONS);
   };
 
   useEffect(() => {
@@ -126,7 +104,7 @@ export function InvitationManagementPage() {
     setTimeout(() => setCopiedToken(null), 2500);
   };
 
-  const handleCreateInvite = async (e) => {
+  const handleCreateInvite = (e) => {
     e.preventDefault();
     setFormError('');
     setActionSuccess('');
@@ -135,91 +113,44 @@ export function InvitationManagementPage() {
       return setFormError('Full Name and Email are required');
     }
 
-    setIsSubmitting(true);
-    try {
-      const selectedDept = departments.find((d) => d.id === departmentId);
-      const payload = {
-        role: inviteType,
-        full_name: fullName.trim(),
-        email: email.trim(),
-        ...(inviteType === 'WARD_COUNCILLOR'
-          ? {
-              district_id: district,
-              ward_number: wardNumber,
-              ward_id: `ward_${wardNumber}`,
-            }
-          : {
-              department_id: departmentId,
-              department_name: selectedDept?.name || 'Municipal Works',
-              designation: designation.trim() || 'Department Officer',
-            }),
-      };
-
-      const result = await adminService.createInvitation(payload);
-      setShowInviteModal(false);
-      setFullName('');
-      setEmail('');
-      setDesignation('');
-      setActionSuccess(`Invitation dispatched for ${result.full_name} (${result.email})! Token: ${result.token}`);
-      setInvitations((prev) => [result, ...prev]);
-    } catch {
-      const selectedDept = departments.find((d) => d.id === departmentId);
-      const localResult = {
-        id: `inv-local-${Date.now()}`,
-        role: inviteType,
-        full_name: fullName.trim(),
-        email: email.trim(),
-        status: 'PENDING',
-        token: `kuraltn-inv-${Date.now()}`,
-        created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 86400000 * 7).toISOString(),
-        ...(inviteType === 'WARD_COUNCILLOR'
-          ? { district_id: district, ward_number: wardNumber, ward_id: `ward_${wardNumber}` }
-          : {
-              department_id: departmentId,
-              department_name: selectedDept?.name || 'Municipal Works',
-              designation: designation.trim() || 'Department Officer',
-            }),
-      };
-      setInvitations((prev) => [localResult, ...prev]);
-      setShowInviteModal(false);
-      setFullName('');
-      setEmail('');
-      setDesignation('');
-      setActionSuccess(`Invitation dispatched for ${localResult.full_name} (${localResult.email})! Token: ${localResult.token}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+    const selectedDept = departments.find((d) => d.id === departmentId);
+    const localResult = {
+      id: `inv-local-${Date.now()}`,
+      role: inviteType,
+      full_name: fullName.trim(),
+      email: email.trim(),
+      status: 'PENDING',
+      token: `kuraltn-inv-${Date.now()}`,
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 86400000 * 7).toISOString(),
+      ...(inviteType === 'WARD_COUNCILLOR'
+        ? { district_id: district, ward_number: wardNumber, ward_id: `ward_${wardNumber}` }
+        : {
+            department_id: departmentId,
+            department_name: selectedDept?.name || 'Municipal Works',
+            designation: designation.trim() || 'Department Officer',
+          }),
+    };
+    setInvitations((prev) => [localResult, ...prev]);
+    setShowInviteModal(false);
+    setFullName('');
+    setEmail('');
+    setDesignation('');
+    setActionSuccess(`Invitation dispatched for ${localResult.full_name} (${localResult.email})! Token: ${localResult.token}`);
   };
 
-  const handleResend = async (id) => {
-    try {
-      await adminService.resendInvitation(id);
-      setInvitations((prev) =>
-        prev.map((inv) =>
-          inv.id === id ? { ...inv, expires_at: new Date(Date.now() + 86400000 * 7).toISOString() } : inv
-        )
-      );
-      setActionSuccess('Invitation re-issued and expiration renewed for 7 days!');
-    } catch {
-      setInvitations((prev) =>
-        prev.map((inv) =>
-          inv.id === id ? { ...inv, expires_at: new Date(Date.now() + 86400000 * 7).toISOString() } : inv
-        )
-      );
-      setActionSuccess('Invitation re-issued and expiration renewed for 7 days!');
-    }
+  const handleResend = (id) => {
+    setInvitations((prev) =>
+      prev.map((inv) =>
+        inv.id === id ? { ...inv, expires_at: new Date(Date.now() + 86400000 * 7).toISOString() } : inv
+      )
+    );
+    setActionSuccess('Invitation re-issued and expiration renewed for 7 days!');
   };
 
-  const handleRevoke = async (id) => {
-    try {
-      await adminService.revokeInvitation(id);
-      setInvitations((prev) => prev.map((inv) => (inv.id === id ? { ...inv, status: 'REVOKED' } : inv)));
-      setActionSuccess('Invitation revoked.');
-    } catch {
-      setInvitations((prev) => prev.map((inv) => (inv.id === id ? { ...inv, status: 'REVOKED' } : inv)));
-      setActionSuccess('Invitation revoked.');
-    }
+  const handleRevoke = (id) => {
+    setInvitations((prev) => prev.map((inv) => (inv.id === id ? { ...inv, status: 'REVOKED' } : inv)));
+    setActionSuccess('Invitation revoked.');
   };
 
   // Filtered invitations

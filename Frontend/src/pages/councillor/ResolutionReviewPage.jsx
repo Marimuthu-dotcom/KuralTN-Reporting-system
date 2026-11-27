@@ -1,6 +1,5 @@
 // Frontend/src/pages/councillor/ResolutionReviewPage.jsx
-import React, { useState, useEffect } from 'react';
-import { complaintService } from '../../services/complaintService';
+import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { CheckCircle2, Clock, ArrowRight } from 'lucide-react';
@@ -28,24 +27,8 @@ const LOCAL_RESOLUTION_COMPLAINTS = [
 
 export function ResolutionReviewPage() {
   const { user } = useAuth();
-  const [complaints, setComplaints] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const res = await complaintService.getComplaints({ ward_id: user?.ward_id, limit: 100 });
-        const filtered = (res.data || []).filter((c) => c.status === 'Resolution Proposed' || c.status === 'Resolved');
-        setComplaints(filtered.length > 0 ? filtered : LOCAL_RESOLUTION_COMPLAINTS);
-      } catch {
-        setComplaints(LOCAL_RESOLUTION_COMPLAINTS);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
-  }, [user]);
+  const [complaints] = useState(LOCAL_RESOLUTION_COMPLAINTS);
+  const [isLoading] = useState(false);
 
   return (
     <div className="space-y-6">

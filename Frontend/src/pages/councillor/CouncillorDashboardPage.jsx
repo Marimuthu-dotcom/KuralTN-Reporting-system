@@ -13,7 +13,6 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { complaintService } from '../../services/complaintService';
 import { StatCard } from '../../components/dashboard/StatCard';
 import { DashboardHeader } from '../../components/dashboard/DashboardHeader';
 import { ActivityList } from '../../components/dashboard/ActivityList';
@@ -87,24 +86,15 @@ export function CouncillorDashboardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [complaints, setComplaints] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [complaints, setComplaints] = useState(LOCAL_WARD_COMPLAINTS);
+  const [isLoading] = useState(false);
   const [proceedModalComplaint, setProceedModalComplaint] = useState(null);
   const [verificationNotes, setVerificationNotes] = useState('');
   const [selectedDeptId, setSelectedDeptId] = useState('');
   const [isProceeding, setIsProceeding] = useState(false);
 
-  const loadWardData = async () => {
-    setIsLoading(true);
-    try {
-      const res = await complaintService.getComplaints({ ward_id: user?.ward_id, limit: 100 });
-      const items = res.data || [];
-      setComplaints(items.length > 0 ? items : LOCAL_WARD_COMPLAINTS);
-    } catch {
-      setComplaints(LOCAL_WARD_COMPLAINTS);
-    } finally {
-      setIsLoading(false);
-    }
+  const loadWardData = () => {
+    setComplaints(LOCAL_WARD_COMPLAINTS);
   };
 
   useEffect(() => {
@@ -117,45 +107,25 @@ export function CouncillorDashboardPage() {
     setSelectedDeptId(comp.department_id || '');
   };
 
-  const handleExecuteProceed = async (e) => {
+  const handleExecuteProceed = (e) => {
     e.preventDefault();
     if (!proceedModalComplaint) return;
     setIsProceeding(true);
-    try {
-      await complaintService.councillorProceed(proceedModalComplaint.id, {
-        verification_notes: verificationNotes,
-        department_id: selectedDeptId || undefined,
-      });
-      setComplaints((prev) =>
-        prev.map((c) =>
-          c.id === proceedModalComplaint.id
-            ? {
-                ...c,
-                councillor_verified: true,
-                status: 'Forwarded to Department',
-                councillor_notes: verificationNotes,
-              }
-            : c
-        )
-      );
-      setProceedModalComplaint(null);
-    } catch {
-      setComplaints((prev) =>
-        prev.map((c) =>
-          c.id === proceedModalComplaint.id
-            ? {
-                ...c,
-                councillor_verified: true,
-                status: 'Forwarded to Department',
-                councillor_notes: verificationNotes,
-              }
-            : c
-        )
-      );
-      setProceedModalComplaint(null);
-    } finally {
-      setIsProceeding(false);
-    }
+
+    setComplaints((prev) =>
+      prev.map((c) =>
+        c.id === proceedModalComplaint.id
+          ? {
+              ...c,
+              councillor_verified: true,
+              status: 'Forwarded to Department',
+              councillor_notes: verificationNotes,
+            }
+          : c
+      )
+    );
+    setProceedModalComplaint(null);
+    setIsProceeding(false);
   };
 
   if (isLoading) return <div className="py-20 flex justify-center"><LoadingSpinner size="lg" /></div>;

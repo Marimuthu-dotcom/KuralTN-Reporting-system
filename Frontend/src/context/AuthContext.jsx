@@ -1,6 +1,5 @@
 // Frontend/src/context/AuthContext.jsx
 import { createContext, useState, useCallback } from 'react';
-import { authService } from '../services/authService';
 import { DEMO_ACCOUNTS } from '../utils/constants';
 
 export const AuthContext = createContext(null);
@@ -22,6 +21,15 @@ function normalizeUser(raw) {
   };
 }
 
+function buildLocalUser(overrides = {}) {
+  return normalizeUser({
+    id: `user-${Date.now()}`,
+    email: 'citizen@civic.local',
+    role: 'CITIZEN',
+    ...overrides,
+  });
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
@@ -33,16 +41,29 @@ export function AuthProvider({ children }) {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogout = useCallback(async () => {
-    await authService.logout();
-    setUser(null);
+  const persistUser = (nextUser) => {
+    setUser(nextUser);
+    if (nextUser) {
+      localStorage.setItem('civic_user', JSON.stringify(nextUser));
+    } else {
+      localStorage.removeItem('civic_user');
+    }
+  };
+
+  const handleLogout = useCallback(() => {
+    persistUser(null);
   }, []);
 
   const login = async (credentials) => {
     setIsLoading(true);
     try {
-      const result = await authService.login(credentials);
-      setUser(result.user);
+      const result = {
+        user: buildLocalUser({
+          email: credentials?.email || 'citizen@civic.local',
+          full_name: credentials?.name || 'Citizen User',
+        }),
+      };
+      persistUser(result.user);
       return result;
     } finally {
       setIsLoading(false);
@@ -52,8 +73,13 @@ export function AuthProvider({ children }) {
   const register = async (payload) => {
     setIsLoading(true);
     try {
-      const result = await authService.register(payload);
-      setUser(result.user);
+      const result = {
+        user: buildLocalUser({
+          email: payload?.email || 'citizen@civic.local',
+          full_name: payload?.full_name || payload?.name || 'Citizen User',
+        }),
+      };
+      persistUser(result.user);
       return result;
     } finally {
       setIsLoading(false);
@@ -63,10 +89,13 @@ export function AuthProvider({ children }) {
   const loginWithGoogle = async (credential, demoUserId = null, mode = 'register', invitationToken = null) => {
     setIsLoading(true);
     try {
-      const result = await authService.loginWithGoogle(credential, demoUserId, mode, invitationToken);
-      if (result?.user) {
-        setUser(result.user);
-      }
+      const demo = demoUserId
+        ? DEMO_ACCOUNTS.find((a) => a.id === demoUserId || a.userId === demoUserId)
+        : null;
+      const result = {
+        user: buildLocalUser(demo || {}),
+      };
+      persistUser(result.user);
       return result;
     } finally {
       setIsLoading(false);
@@ -76,8 +105,13 @@ export function AuthProvider({ children }) {
   const acceptInvitation = async (payload) => {
     setIsLoading(true);
     try {
-      const result = await authService.acceptInvitation(payload);
-      setUser(result.user);
+      const result = {
+        user: buildLocalUser({
+          email: payload?.email || 'invited@civic.local',
+          full_name: payload?.full_name || payload?.name || 'Invited User',
+        }),
+      };
+      persistUser(result.user);
       return result;
     } finally {
       setIsLoading(false);
@@ -93,10 +127,8 @@ export function AuthProvider({ children }) {
     const account = DEMO_ACCOUNTS.find((a) => a.id === targetId || a.userId === targetId);
     if (!account) return null;
 
-    const result = await authService.switchDemoAccount(account.id);
-    if (result?.user) {
-      setUser(result.user);
-    }
+    const result = { user: buildLocalUser(account) };
+    persistUser(result.user);
     return result;
   }, []);
 

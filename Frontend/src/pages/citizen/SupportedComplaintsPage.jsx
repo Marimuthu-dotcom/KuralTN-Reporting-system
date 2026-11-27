@@ -1,6 +1,5 @@
 // Frontend/src/pages/citizen/SupportedComplaintsPage.jsx
-import React, { useState, useEffect } from 'react';
-import { complaintService } from '../../services/complaintService';
+import React, { useState } from 'react';
 import { ComplaintList } from '../../components/complaints/ComplaintList';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { useAuth } from '../../hooks/useAuth';
@@ -47,25 +46,8 @@ const LOCAL_SUPPORTED_COMPLAINTS = [
 
 export function SupportedComplaintsPage() {
   const { user } = useAuth();
-  const [complaints, setComplaints] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadSupported() {
-      setIsLoading(true);
-      try {
-        const res = await complaintService.getComplaints({ ward_id: user?.ward_id, limit: 100 });
-        const all = res.data || [];
-        const supported = all.filter((c) => c.supports_count > 0);
-        setComplaints(supported.length ? supported : LOCAL_SUPPORTED_COMPLAINTS);
-      } catch {
-        setComplaints(LOCAL_SUPPORTED_COMPLAINTS);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadSupported();
-  }, [user]);
+  const [complaints] = useState(LOCAL_SUPPORTED_COMPLAINTS);
+  const [isLoading] = useState(false);
 
   return (
     <div className="space-y-6">

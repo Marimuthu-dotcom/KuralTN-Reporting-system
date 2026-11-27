@@ -1,7 +1,6 @@
 // Frontend/src/pages/admin/AdminDashboardPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { adminService } from '../../services/adminService';
 import { DashboardHeader } from '../../components/dashboard/DashboardHeader';
 import { StatCard } from '../../components/dashboard/StatCard';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
@@ -26,24 +25,9 @@ const LOCAL_ADMIN_ANALYTICS = {
 };
 
 export function AdminDashboardPage() {
-  const [analytics, setAnalytics] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [analytics] = useState(LOCAL_ADMIN_ANALYTICS);
+  const [isLoading] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    async function loadStats() {
-      setIsLoading(true);
-      try {
-        const data = await adminService.getAnalytics();
-        setAnalytics(data || LOCAL_ADMIN_ANALYTICS);
-      } catch {
-        setAnalytics(LOCAL_ADMIN_ANALYTICS);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadStats();
-  }, []);
 
   if (isLoading) return <div className="py-20 flex justify-center"><LoadingSpinner size="lg" /></div>;
 

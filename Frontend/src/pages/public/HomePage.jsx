@@ -7,7 +7,6 @@ import {
   Building,
   ArrowRight,
 } from 'lucide-react';
-import { complaintService } from '../../services/complaintService';
 import { ComplaintCard } from '../../components/complaints/ComplaintCard';
 import { useWard } from '../../hooks/useWard';
 import { useAuth } from '../../hooks/useAuth';
@@ -103,9 +102,9 @@ const LOCAL_FEATURED_COMPLAINTS = [
 ];
 
 export function HomePage() {
-  const [featuredComplaints, setFeaturedComplaints] = useState(LOCAL_FEATURED_COMPLAINTS);
+  const [featuredComplaints] = useState(LOCAL_FEATURED_COMPLAINTS);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading] = useState(false);
   const { categories } = useWard();
   const { isAuthenticated } = useAuth();
   const { t, getCategoryTitle, isTamil } = useLanguage();
@@ -113,25 +112,7 @@ export function HomePage() {
 
 
   useEffect(() => {
-    let isMounted = true;
-    async function fetchFeatured() {
-      try {
-        const res = await complaintService.getComplaints({ limit: 4, sortBy: 'most_supported' });
-        if (isMounted && res.data?.length) {
-          setFeaturedComplaints(res.data);
-        }
-      } catch {
-        // Keep local sample featured grievances when database is unavailable
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    }
-    fetchFeatured();
-    return () => {
-      isMounted = false;
-    };
+    // No backend: local featured complaints list is already loaded
   }, []);
 
   const handleSearchSubmit = (e) => {

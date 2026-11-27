@@ -1,6 +1,5 @@
 // Frontend/src/pages/citizen/WardAnnouncementsPage.jsx
-import React, { useState, useEffect } from 'react';
-import { communityService } from '../../services/communityService';
+import React, { useState } from 'react';
 import { AnnouncementCard } from '../../components/community/AnnouncementCard';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { useAuth } from '../../hooks/useAuth';
@@ -36,25 +35,8 @@ const LOCAL_ANNOUNCEMENTS = [
 
 export function WardAnnouncementsPage() {
   const { user } = useAuth();
-  const [announcements, setAnnouncements] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadAnnouncements() {
-      if (user?.ward_id) {
-        setIsLoading(true);
-        try {
-          const data = await communityService.getAnnouncements(user.ward_id);
-          setAnnouncements(data?.length ? data : LOCAL_ANNOUNCEMENTS);
-        } catch {
-          setAnnouncements(LOCAL_ANNOUNCEMENTS);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    }
-    loadAnnouncements();
-  }, [user]);
+  const [announcements] = useState(LOCAL_ANNOUNCEMENTS);
+  const [isLoading] = useState(false);
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">

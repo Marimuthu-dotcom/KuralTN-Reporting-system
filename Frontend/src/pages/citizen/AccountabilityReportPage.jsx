@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AccountabilityReportForm } from '../../components/accountability/AccountabilityReportForm';
-import { accountabilityService } from '../../services/accountabilityService';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 
 export function AccountabilityReportPage() {
@@ -13,17 +12,12 @@ export function AccountabilityReportPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (formData) => {
+  const handleSubmit = (formData) => {
     setIsLoading(true);
     setError('');
-    try {
-      await accountabilityService.submitReport(formData);
-    } catch {
-      // Fallback for removed accountability backend endpoint
-    } finally {
-      setIsLoading(false);
-      navigate('/accountability/my-reports');
-    }
+    // No backend: skip the service call and proceed directly
+    setIsLoading(false);
+    navigate('/accountability/my-reports');
   };
 
   return (

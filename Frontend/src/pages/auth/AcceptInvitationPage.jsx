@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useLanguage } from '../../hooks/useLanguage';
-import { authService } from '../../services/authService';
 import { LanguageToggle } from '../../components/common/LanguageToggle';
 import { Button } from '../../components/common/Button';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
@@ -21,6 +20,15 @@ import {
   Sparkles,
   MapPin,
 } from 'lucide-react';
+
+const LOCAL_INVITATION = {
+  full_name: 'Invited Official',
+  email: 'official@corporation.tn.gov.in',
+  role: 'WARD_COUNCILLOR',
+  ward_number: '114',
+  ward_id: 'ward-chn-114',
+  district_id: 'Chennai',
+};
 
 export function AcceptInvitationPage() {
   const [searchParams] = useLanguage() && useSearchParams();
@@ -41,40 +49,25 @@ export function AcceptInvitationPage() {
   const [actionError, setActionError] = useState('');
 
   useEffect(() => {
-    async function fetchInvitation() {
-      if (!token) {
-        setVerifyError(
-          isTamil
-            ? 'அழைப்புக் குறியீடு (Token) விடுபட்டுள்ளது. தயவுசெய்து உங்கள் அழைப்பு இணைப்பைச் சரிபார்க்கவும்.'
-            : 'Invitation token is missing. Please check your invitation link.'
-        );
-        setIsVerifying(false);
-        return;
-      }
-
-      setIsVerifying(true);
-      setVerifyError('');
-      try {
-        const data = await authService.getInvitation(token);
-        setInvitation(data);
-        if (data.full_name) {
-          const suggested = data.full_name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-          setUsername(suggested);
-        }
-      } catch (err) {
-        setVerifyError(
-          err.response?.data?.message ||
-            err.message ||
-            (isTamil
-              ? 'இந்த அழைப்பு காலாவதியானது அல்லது செல்லுபடியாகாது.'
-              : 'This invitation is invalid, expired, or has already been revoked.')
-        );
-      } finally {
-        setIsVerifying(false);
-      }
+    if (!token) {
+      setVerifyError(
+        isTamil
+          ? 'அழைப்புக் குறியீடு (Token) விடுபட்டுள்ளது. தயவுசெய்து உங்கள் அழைப்பு இணைப்பைச் சரிபார்க்கவும்.'
+          : 'Invitation token is missing. Please check your invitation link.'
+      );
+      setIsVerifying(false);
+      return;
     }
 
-    fetchInvitation();
+    setIsVerifying(true);
+    setVerifyError('');
+    const data = LOCAL_INVITATION;
+    setInvitation(data);
+    if (data.full_name) {
+      const suggested = data.full_name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      setUsername(suggested);
+    }
+    setIsVerifying(false);
   }, [token, isTamil]);
 
   const handlePostAuthRedirect = (role) => {
@@ -112,7 +105,7 @@ export function AcceptInvitationPage() {
       });
       handlePostAuthRedirect(res.user?.role || invitation.role);
     } catch (err) {
-      setActionError(err.response?.data?.message || err.message || 'Failed to accept invitation');
+      setActionError(err.message || 'Failed to accept invitation');
     } finally {
       setIsSubmitting(false);
     }
@@ -122,26 +115,10 @@ export function AcceptInvitationPage() {
     setActionError('');
     setIsSubmitting(true);
     try {
-      // Create Google JWT matching invitation email
-      const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-      const payload = btoa(
-        JSON.stringify({
-          sub: `google_inv_${token.substring(0, 10)}`,
-          email: invitation.email,
-          name: invitation.full_name,
-          picture: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-          email_verified: true,
-          iss: 'https://accounts.google.com',
-          aud: 'tn-civic-applet',
-        })
-      );
-      const signature = btoa('mock_secure_invitation_signature');
-      const credential = `${header}.${payload}.${signature}`;
-
-      const res = await loginWithGoogle(credential, null, 'login', token);
+      const res = await loginWithGoogle(null, null, 'login', token);
       handlePostAuthRedirect(res.user?.role || invitation.role);
     } catch (err) {
-      setActionError(err.response?.data?.message || err.message || 'Failed to accept with Google account');
+      setActionError(err.message || 'Failed to accept with Google account');
     } finally {
       setIsSubmitting(false);
     }

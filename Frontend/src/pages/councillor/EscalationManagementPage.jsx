@@ -1,6 +1,5 @@
 // Frontend/src/pages/councillor/EscalationManagementPage.jsx
-import React, { useState, useEffect } from 'react';
-import { escalationService } from '../../services/escalationService';
+import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { Breadcrumbs } from '../../components/navigation/Breadcrumbs';
 import { Badge } from '../../components/common/Badge';
@@ -33,23 +32,8 @@ const LOCAL_WARD_ESCALATIONS = [
 
 export function EscalationManagementPage() {
   const { user } = useAuth();
-  const [escalations, setEscalations] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const data = await escalationService.getAllEscalations();
-        setEscalations(data?.length ? data : LOCAL_WARD_ESCALATIONS);
-      } catch {
-        setEscalations(LOCAL_WARD_ESCALATIONS);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
-  }, []);
+  const [escalations] = useState(LOCAL_WARD_ESCALATIONS);
+  const [isLoading] = useState(false);
 
   return (
     <div className="space-y-6">
